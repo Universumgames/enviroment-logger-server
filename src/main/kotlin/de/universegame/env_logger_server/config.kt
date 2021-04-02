@@ -12,11 +12,8 @@ var dateTimeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern(config.da
 data class Config(
     val datetimePattern: String = "yyyy-MM-dd HH:mm:ss.SSS",
 
-    val secretJWTString: String = "aslkfdgj304rigjsokfj0wo3p45ktjsdlfoigjhwo39nslkfikgkupoidrjg",
-
     val serverConfig: ServerConfig = ServerConfig(),
     val httpResponses: HTTPResponsesConfig = HTTPResponsesConfig(),
-    val dbConfig: DBConfig = DBConfig()
 ) {
 }
 
@@ -37,10 +34,3 @@ data class HTTPResponsesConfig(
 fun Int.toStatus(): Status {
     return Status(this, "cast")
 }
-
-@Serializable
-data class DBConfig(
-    val mysqlUser: String = "env_logger",
-    val mysqlPwd: String = "1qwSDCFGz7(iklBP,?WEdfghzu/(9oLp)",
-    val mysqlUrl: String = "jdbc:mysql://localhost:3306/cmm?autoReconnect=true&useSSL=false"
-)
