@@ -1,9 +1,9 @@
 package de.universegame.env_logger_server
 
 import de.universegame.env_logger_server.apirouter.router
-import de.universegame.env_logger_server.svg.ENVDataSVGRangeSelect
 import de.universegame.env_logger_server.svg.EnvDataSVGGenerator
 import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.http4k.format.ConfigurableKotlinxSerialization
 import org.http4k.server.Netty
@@ -15,7 +15,7 @@ val customJson = Json {
     ignoreUnknownKeys = true
 }
 
-object CMMInfoJackson : ConfigurableKotlinxSerialization({
+object http4kJsonConfig : ConfigurableKotlinxSerialization({
     encodeDefaults = true
     prettyPrint = true
     ignoreUnknownKeys = true
@@ -30,7 +30,6 @@ fun <T> MutableList<T>.prepend(element: T) {
 var envHandler: EnvHandler = EnvHandler()
 
 fun main() {
-    saveFile("./config/template.svg", EnvDataSVGGenerator.genSVG(envHandler.secondData, ENVDataSVGRangeSelect.LAST6HOURS,debug = true).trimIndent().trimStart(' '), false)
     Logger.init(LoggingTypes.All)
     log("Init Routes")
     val handler = router
@@ -39,8 +38,17 @@ fun main() {
     //storing new variables of class
     saveConfig("./config/config.json")
 
-    val data = loadFile("./config/data.json")
-    envHandler = customJson.decodeFromString(data)
+    var data = loadFile("./config/data.json")
+    if (data.isEmpty()) {
+        data = customJson.encodeToString(envHandler)
+        saveFile("./config/data.json", data)
+    } else
+        envHandler = customJson.decodeFromString(data)
+
+    saveFile(
+        "./config/template.svg",
+        EnvDataSVGGenerator.genSVG(envHandler.secondData, envHandler, debug = true).trimIndent().trimStart(' ')
+    )
 
     if (configSetUp) {
         log("Load DB")

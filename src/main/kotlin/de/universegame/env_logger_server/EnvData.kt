@@ -2,6 +2,7 @@ package de.universegame.env_logger_server
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
+import kotlinx.serialization.encodeToString
 import java.time.LocalDateTime
 import java.util.*
 
@@ -66,19 +67,6 @@ data class EnvData(
     val maxSize: Int = 500
 ) : IEnvData {
 
-    @Deprecated("")
-    fun toIoT(): EnvData {
-        val dataClone = copy()
-        dataClone.valueMap.forEach {
-            if (it.value.size > 0) {
-                val first = it.value[0].copy()
-                it.value.clear()
-                it.value.add(first)
-            }
-        }
-        return dataClone
-    }
-
     override fun addEntry(set: EnvDataSet) {
         super.addEntry(set)
         if (valueMap[set.mac]?.size ?: 0 > maxSize)
@@ -112,6 +100,29 @@ data class EnvHandler(
     @Transient
     private var lastUpdatedHour = 0
 
+    /*var maxHum: Double = Double.MIN_VALUE
+        private set
+    var minHum: Double = Double.MAX_VALUE
+        private set*/
+    var maxTemp: Double = Double.MIN_VALUE
+        private set
+    var minTemp: Double = Double.MAX_VALUE
+        private set
+    var maxPres: Double = Double.MIN_VALUE
+        private set
+    var minPres: Double = Double.MAX_VALUE
+        private set
+    var maxCO2: Int = 0
+        private set
+    var minCO2: Int = 0
+        private set
+    var maxTVOC: Int = 0
+        private set
+    var minTVOC: Int = 0
+        private set
+    var minTime: Long = Date().time
+        private set
+
     fun addEntry(set: EnvDataSet) {
         iotData.addEntry(set)
         secondData.addEntry(set)
@@ -120,17 +131,38 @@ data class EnvHandler(
             lastUpdatedSecond = time.second
             minuteData.addEntry(set)
         }
-        if (time.minute != lastUpdatedMinute){
+        if (time.minute != lastUpdatedMinute) {
             lastUpdatedMinute = time.minute
             hourData.addEntry(set)
         }
-        if(time.hour != lastUpdatedHour){
+        if (time.hour != lastUpdatedHour) {
             dayData.addEntry(set)
             monthData.addEntry(set)
-            if(time.hour % 6 == 0)
+            if (time.hour % 6 == 0)
                 yearData.addEntry(set)
             lastUpdatedHour = time.hour
+            save()
         }
+        updateMinMax(set)
+    }
+
+    private fun updateMinMax(set: EnvDataSet) {
+        //if (set.humidity > maxHum) maxHum = set.humidity
+        //if (set.humidity < minHum) minHum = set.humidity
+
+        if (set.temperature > maxTemp) maxTemp = set.temperature
+        if (set.temperature < minTemp && set.temperature > -500) minTemp = set.temperature
+
+        if (set.pressure > maxPres) maxPres = set.pressure
+        if (set.pressure < minPres && set.pressure >= 0) minPres = set.pressure
+
+        if (set.co2 > maxCO2) maxCO2 = set.co2.toInt()
+        if (set.co2 < minCO2 && set.co2 >= 400) minCO2 = set.co2.toInt()
+
+        if (set.tvoc > maxTVOC) maxTVOC = set.tvoc.toInt()
+        if (set.tvoc < minTVOC && set.tvoc >= 0) minTVOC = set.tvoc.toInt()
+
+        if (set.time < minTime) minTime = set.time
     }
 
     fun addEntry(
@@ -143,5 +175,9 @@ data class EnvHandler(
         mac: String
     ) {
         addEntry(EnvDataSet(humidity, temperature, pressure, co2, tvoc, heightApproximation, mac, Date().time))
+    }
+
+    private fun save() {
+        saveFile("./config/data.json", customJson.encodeToString(this))
     }
 }

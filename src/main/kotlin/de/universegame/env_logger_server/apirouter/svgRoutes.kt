@@ -12,7 +12,7 @@ import org.http4k.routing.routes
 val svgRoutes = routes(
     "/minutes" bind Method.GET to { request: Request ->
         try {
-            Response(Status.OK).body(EnvDataSVGGenerator.genSVG(envHandler.secondData))
+            Response(Status.OK).body(EnvDataSVGGenerator.genSVG(envHandler.secondData, envHandler))
         } catch (e: Exception) {
             e.printStackTrace()
             Response.invoke(Status.INTERNAL_SERVER_ERROR)
@@ -20,7 +20,7 @@ val svgRoutes = routes(
     },
     "/hours" bind Method.GET to { request: Request ->
         try {
-            Response(Status.OK).body(EnvDataSVGGenerator.genSVG(envHandler.minuteData))
+            Response(Status.OK).body(EnvDataSVGGenerator.genSVG(envHandler.minuteData, envHandler))
         } catch (e: Exception) {
             e.printStackTrace()
             Response.invoke(Status.INTERNAL_SERVER_ERROR)
@@ -28,7 +28,7 @@ val svgRoutes = routes(
     },
     "/days" bind Method.GET to { request: Request ->
         try {
-            Response(Status.OK).body(EnvDataSVGGenerator.genSVG(envHandler.hourData))
+            Response(Status.OK).body(EnvDataSVGGenerator.genSVG(envHandler.hourData, envHandler))
         } catch (e: Exception) {
             e.printStackTrace()
             Response.invoke(Status.INTERNAL_SERVER_ERROR)
@@ -36,7 +36,7 @@ val svgRoutes = routes(
     },
     "/weeks" bind Method.GET to { request: Request ->
         try {
-            Response(Status.OK).body(EnvDataSVGGenerator.genSVG(envHandler.dayData))
+            Response(Status.OK).body(EnvDataSVGGenerator.genSVG(envHandler.dayData, envHandler))
         } catch (e: Exception) {
             e.printStackTrace()
             Response.invoke(Status.INTERNAL_SERVER_ERROR)
@@ -44,7 +44,7 @@ val svgRoutes = routes(
     },
     "/months" bind Method.GET to { request: Request ->
         try {
-            Response(Status.OK).body(EnvDataSVGGenerator.genSVG(envHandler.monthData))
+            Response(Status.OK).body(EnvDataSVGGenerator.genSVG(envHandler.monthData, envHandler))
         } catch (e: Exception) {
             e.printStackTrace()
             Response.invoke(Status.INTERNAL_SERVER_ERROR)
@@ -52,7 +52,7 @@ val svgRoutes = routes(
     },
     "/years" bind Method.GET to { request: Request ->
         try {
-            Response(Status.OK).body(EnvDataSVGGenerator.genSVG(envHandler.yearData))
+            Response(Status.OK).body(EnvDataSVGGenerator.genSVG(envHandler.yearData, envHandler))
         } catch (e: Exception) {
             e.printStackTrace()
             Response.invoke(Status.INTERNAL_SERVER_ERROR)

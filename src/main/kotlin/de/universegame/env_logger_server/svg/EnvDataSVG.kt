@@ -2,20 +2,45 @@ package de.universegame.env_logger_server.svg
 
 import de.universegame.env_logger_server.ENVDataPrecison
 import de.universegame.env_logger_server.EnvData
+import de.universegame.env_logger_server.EnvHandler
+import de.universegame.env_logger_server.map
+import java.util.*
 import kotlin.math.abs
 
-
+private data class MinMaxValueSet(
+    var maxTemp: Double = Double.MIN_VALUE,
+    var minTemp: Double = Double.MAX_VALUE,
+    var maxPres: Double = Double.MIN_VALUE,
+    var minPres: Double = Double.MAX_VALUE,
+    var maxCO2: Int = Int.MIN_VALUE,
+    var minCO2: Int = Int.MAX_VALUE,
+    var maxTVOC: Int = Int.MIN_VALUE,
+    var minTVOC: Int = Int.MAX_VALUE,
+    var minTime: Long = 0L
+)
 
 object EnvDataSVGGenerator {
 
     fun genSVG(
         dataSet: EnvData,
+        handler: EnvHandler,
         debug: Boolean = false
     ): String {
         val height: Int = 1000
         val width: Int = 1700
         val dims = NamedGrid_Dimensions(120.0, 1590.0, 40.0, 960.0)
         val textData = NamedGrid_TextData(5.0, 120.0, 1700.0)
+        val minMaxValueSet: MinMaxValueSet = MinMaxValueSet(
+            handler.maxTemp,
+            handler.minTemp,
+            handler.maxPres,
+            handler.minPres,
+            handler.maxCO2,
+            handler.minCO2,
+            handler.maxTVOC,
+            handler.minTVOC,
+            handler.minTime
+        )
         return """
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg:svg xmlns:svg="http://www.w3.org/2000/svg" viewBox="0 0 1700 1000" version="1.1" ${if (debug) """style="background-color:green"""" else ""} xmlns="http://www.w3.org/2000/svg">
@@ -34,10 +59,20 @@ object EnvDataSVGGenerator {
             namedGrid(
                 listOf("Temperature", "Humidity", "Pressure", "CO2", "TVOC"),
                 genMajColText(dataSet.precision),
-                RowValueGenerator.genRowValues(100.0, 0.0, 1020.0, 1000.0, 3000, 0, 3000, 0),
+                RowValueGenerator.genRowValues(
+                    handler.maxTemp,
+                    handler.minTemp,
+                    handler.maxPres,
+                    handler.minPres,
+                    handler.maxCO2,
+                    handler.minCO2,
+                    handler.maxTVOC,
+                    handler.minTVOC
+                ),
                 genMinColText(dataSet.precision), dims, textData, 5, 6
             )
         }
+        ${drawValues(dataSet, minMaxValueSet, dims)}
 </svg:svg>
 
 """.trimIndent()
@@ -64,7 +99,7 @@ object EnvDataSVGGenerator {
     }
 
     private fun genMinColText(range: ENVDataPrecison, cols: Int = 6, subCols: Int = 6): List<String> {
-        when(range){
+        when (range) {
             ENVDataPrecison.LAST6MINUTES -> return genRecurring("s", 60, subCols, cols)
             ENVDataPrecison.LAST6HOURS_1SEC_PRECISION -> return genRecurring("m", 60, subCols, cols)
             ENVDataPrecison.LAST6DAYS_1_MIN_PRECISION -> return genRecurring("h", 24, subCols, cols)
@@ -75,7 +110,7 @@ object EnvDataSVGGenerator {
         }
     }
 
-    fun genRecurring(sizeName: String, maxValue: Int, subCols: Int = 6, cols: Int = 6): List<String>{
+    fun genRecurring(sizeName: String, maxValue: Int, subCols: Int = 6, cols: Int = 6): List<String> {
         val list: MutableList<String> = mutableListOf()
         val interval = maxValue / subCols.toDouble()
         for (i in 0..((maxValue / interval) * cols).toInt()) {
@@ -84,15 +119,117 @@ object EnvDataSVGGenerator {
         return list
     }
 
-    fun genRecurring(interval: Int = 4, number: Int = 6): List<String> {
-        val list: MutableList<String> = mutableListOf()
-        for (i in 0..((24 / interval) * number)) {
-            list.add(((i * interval) % 24).toString() + "h")
+    private fun drawValues(
+        dataSet: EnvData,
+        minMax: MinMaxValueSet,
+        dims: NamedGrid_Dimensions,
+        rowCount: Int = 5,
+        colorSet: List<String> = listOf("green", "red", "blue", "violet", "gray")
+    ): String {
+        var text = """<svg:g id="lines"> """ + "\n"
+        var setIndex = 0
+        val height = (dims.endYGrid - dims.startYGrid) / rowCount
+        val minTime = minMax.minTime
+        val maxTime = Date().time
+        for (mapEntry in dataSet.valueMap) {
+            val color: String = if (colorSet.size - 1 > setIndex) colorSet[setIndex] else ""
+            text += """<svg:g id="${mapEntry.key}" style="fill: none; stroke: $color;stroke-width:2">"  """ + "\n"
+            var temp = """<polyline id="temp" points=" """ + "\n"
+            var hum = """<polyline id="hum" points=" """ + "\n"
+            var pres = """<polyline id="pres" points=" """ + "\n"
+            var co2 = """<polyline id="co2" points=" """ + "\n"
+            var tvoc = """<polyline id="tvoc" points=" """ + "\n"
+            for (entry in mapEntry.value) {
+                val mapX = map(
+                    entry.time,
+                    minTime,
+                    maxTime,
+                    dims.startXGrid,
+                    dims.endXGrid
+                )
+
+                if(entry.temperature > -500.0) {
+                    run { //temp
+                        val mapY = map(
+                            entry.temperature,
+                            minMax.minTemp,
+                            minMax.maxTemp,
+                            dims.startYGrid + 1 * height,
+                            dims.startYGrid + 0 * height,
+                        )
+
+                        temp += xyToString(mapY, mapX)
+                    }
+                }
+                if(entry.humidity >= 0.0) {
+                    run { //hum
+                        val mapY = map(
+                            entry.humidity,
+                            0.0,
+                            100.0,
+                            dims.startYGrid + 2 * height,
+                            dims.startYGrid + 1 * height,
+                        )
+
+                        hum += xyToString(mapY, mapX)
+                    }
+                }
+                if(entry.pressure >= 0) {
+                    run { //pres
+                        val mapY = map(
+                            entry.pressure,
+                            minMax.minPres,
+                            minMax.maxPres,
+                            dims.startYGrid + 3 * height,
+                            dims.startYGrid + 2 * height,
+                        )
+
+                        pres += xyToString(mapY, mapX)
+                    }
+                }
+                if(entry.co2 >= 0) {
+                    run { //co2
+                        val mapY = map(
+                            entry.co2,
+                            minMax.minCO2.toDouble(),
+                            minMax.maxCO2.toDouble(),
+                            dims.startYGrid + 4 * height,
+                            dims.startYGrid + 3 * height,
+                        )
+                        co2 += xyToString(mapY, mapX)
+                    }
+                }
+                if(entry.tvoc >= 0) {
+                    run { //tvoc
+                        val mapY = map(
+                            entry.tvoc,
+                            minMax.minTVOC.toDouble(),
+                            minMax.maxTVOC.toDouble(),
+                            dims.startYGrid + 5 * height,
+                            dims.startYGrid + 4 * height,
+                        )
+                        tvoc += xyToString(mapY, mapX)
+                    }
+                }
+            }
+            temp += """ "/> """ + "\n"
+            hum += """ "/> """ + "\n"
+            pres += """ "/> """ + "\n"
+            co2 += """ "/> """ + "\n"
+            tvoc += """ "/> """ + "\n"
+
+            text += temp + hum + pres + co2 + tvoc
+            text += """</svg:g>""" + "\n"
+            setIndex++
         }
-        return list
+        text += """</svg:g>"""
+        return text
+    }
+
+    private fun xyToString(x: Double, y: Double): String {
+        return "$y,$x "
     }
 }
-
 
 
 private object RowValueGenerator {

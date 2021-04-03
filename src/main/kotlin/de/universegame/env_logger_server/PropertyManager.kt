@@ -32,24 +32,23 @@ fun loadConfig(filename: String): Boolean {
 fun saveConfig(filename: String) {
     log("Created new config file", LoggingTypes.UserRegistration)
     val config: String = customJson.encodeToString(config)
-    saveFile(filename, config, true)
+    saveFile(filename, config)
     log("Saved config", LoggingTypes.UserRegistration)
 
 }
 
-fun loadFile(filename: String): String{
+fun loadFile(filename: String): String {
     val file = File(filename).also { file ->
         file.parentFile.mkdirs()
     }
-    if (!file.exists()) saveFile(filename, "", false)
+    if (!file.exists()) saveFile(filename, "")
     return file.readText()
 }
 
-fun saveFile(filename: String, text: String, noOverride: Boolean) {
+fun saveFile(filename: String, text: String) {
     val file = File(filename).also { file ->
         file.parentFile.mkdirs()
     }
-    if (!noOverride || file.createNewFile()) {
-        file.writeText(text)
-    }
+
+    file.writeText(text)
 }
