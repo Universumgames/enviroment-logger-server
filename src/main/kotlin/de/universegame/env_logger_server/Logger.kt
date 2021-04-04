@@ -11,17 +11,6 @@ fun log(line: String, loggingType: LoggingTypes = LoggingTypes.Undefined) {
 enum class LoggingTypes {
     All,
     Debug,
-    User,
-    UserLogin,
-    UserVerification,
-    UserRegistration,
-    UserErrors,
-    UserMiscellaneous,
-    Device,
-    DeviceRegistration,
-    DeviceAction,
-    DeviceError,
-    DeviceMiscellaneous,
     Error,
     Undefined
 }
@@ -66,15 +55,6 @@ object Logger {
                 LoggingTypes.Debug -> {
                     settings.addAll(LoggingTypes.values().filter { it !in settings })
                     return
-                }
-                LoggingTypes.User -> {
-                    settings.addAll(
-                        LoggingTypes.values().filter { it.name.toLowerCase().contains("user") && it !in settings })
-                }
-                LoggingTypes.Device -> {
-                    settings.addAll(
-                        LoggingTypes.values()
-                            .filter { it.name.toLowerCase().contains("device") && it !in settings })
                 }
                 else ->
                     if (type !in settings)

@@ -2,8 +2,6 @@ package de.universegame.env_logger_server
 
 import de.universegame.env_logger_server.apirouter.router
 import de.universegame.env_logger_server.svg.EnvDataSVGGenerator
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.http4k.format.ConfigurableKotlinxSerialization
 import org.http4k.server.Netty
@@ -38,22 +36,28 @@ fun main() {
     //storing new variables of class
     saveConfig("./config/config.json")
 
-    var data = loadFile("./config/data.json")
-    if (data.isEmpty()) {
-        data = customJson.encodeToString(envHandler)
-        saveFile("./config/data.json", data)
-    } else
-        envHandler = customJson.decodeFromString(data)
+    createBackup()
+    envHandler = loadEnvHandlerFromFiles("./data", customJson)
 
     saveFile(
-        "./config/template.svg",
-        EnvDataSVGGenerator.genSVG(envHandler.secondData, envHandler, debug = true).trimIndent().trimStart(' ')
+        "./data/svg/hourData.svg",
+        EnvDataSVGGenerator.genSVG(envHandler.hourData, envHandler, debug = true).trimIndent().trimStart(' ')
     )
+    saveFile(
+        "./data/svg/dayData.svg",
+        EnvDataSVGGenerator.genSVG(envHandler.dayData, envHandler, debug = true).trimIndent().trimStart(' ')
+    )
+    saveFile(
+        "./data/svg/monthData.svg",
+        EnvDataSVGGenerator.genSVG(envHandler.monthData, envHandler, debug = true).trimIndent().trimStart(' ')
+    )
+    saveFile(
+        "./data/svg/yearData.svg",
+        EnvDataSVGGenerator.genSVG(envHandler.yearData, envHandler, debug = true).trimIndent().trimStart(' ')
+    )
+    log("Generated SVG's")
 
     if (configSetUp) {
-        log("Load DB")
-        //initializeDB()
-
         log("Starting server")
         val server = handler.asServer(Netty(config.serverConfig.serverPort)).start()
         log("To stop the server, type 'stop'")
@@ -61,6 +65,8 @@ fun main() {
         while (readLine() != "stop");
         log("Stopping server")
         server.stop()
+
+        envHandler.saveEnvDataToFiles("./data", customJson)
         log("Stopped Server")
         Logger.stop()
     } else {

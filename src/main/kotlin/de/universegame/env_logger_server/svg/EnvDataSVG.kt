@@ -30,6 +30,17 @@ object EnvDataSVGGenerator {
         val width: Int = 1700
         val dims = NamedGrid_Dimensions(120.0, 1590.0, 40.0, 960.0)
         val textData = NamedGrid_TextData(5.0, 120.0, 1700.0)
+        val c = Calendar.getInstance()
+        c.time = Date()
+        when (dataSet.precision) {
+            ENVDataPrecison.LATESTDATAONLY -> c.add(Calendar.SECOND, -1)
+            ENVDataPrecison.LAST6MINUTES -> c.add(Calendar.MINUTE, -6)
+            ENVDataPrecison.LAST6HOURS_1SEC_PRECISION -> c.add(Calendar.HOUR_OF_DAY, -6)
+            ENVDataPrecison.LAST6DAYS_1_MIN_PRECISION -> c.add(Calendar.DAY_OF_MONTH, -6)
+            ENVDataPrecison.LAST6WEEKS_1_HOUR_PRECISION -> c.add(Calendar.WEEK_OF_YEAR, -6)
+            ENVDataPrecison.LAST6MONTHS_1_HOUR_PRECISION -> c.add(Calendar.MONTH, -6)
+            ENVDataPrecison.LAST6YEARS_6_HOUR_PRECISION -> c.add(Calendar.YEAR, -6)
+        }
         val minMaxValueSet: MinMaxValueSet = MinMaxValueSet(
             handler.maxTemp,
             handler.minTemp,
@@ -39,7 +50,7 @@ object EnvDataSVGGenerator {
             handler.minCO2,
             handler.maxTVOC,
             handler.minTVOC,
-            handler.minTime
+            c.time.time
         )
         return """
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
@@ -77,6 +88,7 @@ object EnvDataSVGGenerator {
 
 """.trimIndent()
     }
+
 
     private fun genMajColText(range: ENVDataPrecison): List<String> {
         var list: MutableList<String> = mutableListOf()
@@ -116,7 +128,7 @@ object EnvDataSVGGenerator {
         for (i in 0..((maxValue / interval) * cols).toInt()) {
             list.add(((i * interval) % maxValue).toInt().toString() + sizeName)
         }
-        return list
+        return list.reversed()
     }
 
     private fun drawValues(
@@ -139,76 +151,79 @@ object EnvDataSVGGenerator {
             var pres = """<polyline id="pres" points=" """ + "\n"
             var co2 = """<polyline id="co2" points=" """ + "\n"
             var tvoc = """<polyline id="tvoc" points=" """ + "\n"
-            for (entry in mapEntry.value) {
-                val mapX = map(
-                    entry.time,
-                    minTime,
-                    maxTime,
-                    dims.startXGrid,
-                    dims.endXGrid
-                )
+            for (i in 0 until mapEntry.value.size) {
+                val entry = mapEntry.value[i]
+                if (entry.time > minTime) {
+                    val mapX = map(
+                        entry.time,
+                        minTime,
+                        maxTime,
+                        dims.startXGrid,
+                        dims.endXGrid
+                    )
 
-                if(entry.temperature > -500.0) {
-                    run { //temp
-                        val mapY = map(
-                            entry.temperature,
-                            minMax.minTemp,
-                            minMax.maxTemp,
-                            dims.startYGrid + 1 * height,
-                            dims.startYGrid + 0 * height,
-                        )
+                    if (entry.temperature > -500.0) {
+                        run { //temp
+                            val mapY = map(
+                                entry.temperature,
+                                minMax.minTemp,
+                                minMax.maxTemp,
+                                dims.startYGrid + 1 * height,
+                                dims.startYGrid + 0 * height,
+                            )
 
-                        temp += xyToString(mapY, mapX)
+                            temp += xyToString(mapY, mapX)
+                        }
                     }
-                }
-                if(entry.humidity >= 0.0) {
-                    run { //hum
-                        val mapY = map(
-                            entry.humidity,
-                            0.0,
-                            100.0,
-                            dims.startYGrid + 2 * height,
-                            dims.startYGrid + 1 * height,
-                        )
+                    if (entry.humidity >= 0.0) {
+                        run { //hum
+                            val mapY = map(
+                                entry.humidity,
+                                0.0,
+                                100.0,
+                                dims.startYGrid + 2 * height,
+                                dims.startYGrid + 1 * height,
+                            )
 
-                        hum += xyToString(mapY, mapX)
+                            hum += xyToString(mapY, mapX)
+                        }
                     }
-                }
-                if(entry.pressure >= 0) {
-                    run { //pres
-                        val mapY = map(
-                            entry.pressure,
-                            minMax.minPres,
-                            minMax.maxPres,
-                            dims.startYGrid + 3 * height,
-                            dims.startYGrid + 2 * height,
-                        )
+                    if (entry.pressure >= 0) {
+                        run { //pres
+                            val mapY = map(
+                                entry.pressure,
+                                minMax.minPres,
+                                minMax.maxPres,
+                                dims.startYGrid + 3 * height,
+                                dims.startYGrid + 2 * height,
+                            )
 
-                        pres += xyToString(mapY, mapX)
+                            pres += xyToString(mapY, mapX)
+                        }
                     }
-                }
-                if(entry.co2 >= 0) {
-                    run { //co2
-                        val mapY = map(
-                            entry.co2,
-                            minMax.minCO2.toDouble(),
-                            minMax.maxCO2.toDouble(),
-                            dims.startYGrid + 4 * height,
-                            dims.startYGrid + 3 * height,
-                        )
-                        co2 += xyToString(mapY, mapX)
+                    if (entry.co2 >= 0) {
+                        run { //co2
+                            val mapY = map(
+                                entry.co2,
+                                minMax.minCO2.toDouble(),
+                                minMax.maxCO2.toDouble(),
+                                dims.startYGrid + 4 * height,
+                                dims.startYGrid + 3 * height,
+                            )
+                            co2 += xyToString(mapY, mapX)
+                        }
                     }
-                }
-                if(entry.tvoc >= 0) {
-                    run { //tvoc
-                        val mapY = map(
-                            entry.tvoc,
-                            minMax.minTVOC.toDouble(),
-                            minMax.maxTVOC.toDouble(),
-                            dims.startYGrid + 5 * height,
-                            dims.startYGrid + 4 * height,
-                        )
-                        tvoc += xyToString(mapY, mapX)
+                    if (entry.tvoc >= 0) {
+                        run { //tvoc
+                            val mapY = map(
+                                entry.tvoc,
+                                minMax.minTVOC.toDouble(),
+                                minMax.maxTVOC.toDouble(),
+                                dims.startYGrid + 5 * height,
+                                dims.startYGrid + 4 * height,
+                            )
+                            tvoc += xyToString(mapY, mapX)
+                        }
                     }
                 }
             }
@@ -221,13 +236,14 @@ object EnvDataSVGGenerator {
             text += temp + hum + pres + co2 + tvoc
             text += """</svg:g>""" + "\n"
             setIndex++
+
         }
         text += """</svg:g>"""
         return text
     }
 
-    private fun xyToString(x: Double, y: Double): String {
-        return "$y,$x "
+    private fun xyToString(y: Double, x: Double): String {
+        return "$x,$y "
     }
 }
 
@@ -318,7 +334,7 @@ private object RowValueGenerator {
         val distance = (maxCO2 - minCO2).toDouble() / separations
         var curDistance = maxCO2.toDouble()
         for (i in 0..separations) {
-            list.add(curDistance.toInt().toString())
+            list.add(curDistance.toInt().toString() + "ppm")
             curDistance -= distance
         }
         return list
@@ -329,7 +345,7 @@ private object RowValueGenerator {
         val distance = (maxTVOC - minTVOC).toDouble() / separations
         var curDistance = maxTVOC.toDouble()
         for (i in 0..separations) {
-            list.add(curDistance.toInt().toString())
+            list.add(curDistance.toInt().toString() + "ppb")
             curDistance -= distance
         }
         return list

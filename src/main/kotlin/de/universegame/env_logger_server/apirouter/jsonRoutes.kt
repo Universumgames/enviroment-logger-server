@@ -10,7 +10,7 @@ import org.http4k.routing.routes
 val jsonRoutes = routes(
     "/minutes" bind Method.GET to { request: Request ->
         try {
-            Response(Status.OK).with(Body.auto<EnvData>().toLens() of envHandler.minuteData)
+            Response(Status.OK).with(Body.auto<EnvData>().toLens() of envHandler.minuteData.copy())
         } catch (e: Exception) {
             e.printStackTrace()
             Response.invoke(Status.INTERNAL_SERVER_ERROR)
@@ -18,7 +18,7 @@ val jsonRoutes = routes(
     },
     "/hours" bind Method.GET to { request: Request ->
         try {
-            Response(Status.OK).with(Body.auto<EnvData>().toLens() of envHandler.hourData)
+            Response(Status.OK).with(Body.auto<EnvData>().toLens() of envHandler.hourData.copy())
         } catch (e: Exception) {
             e.printStackTrace()
             Response.invoke(Status.INTERNAL_SERVER_ERROR)
@@ -26,7 +26,7 @@ val jsonRoutes = routes(
     },
     "/all" bind Method.GET to { request: Request ->
         try {
-            Response(Status.OK).with(Body.auto<EnvData>().toLens() of envHandler.secondData)
+            Response(Status.OK).with(Body.auto<EnvData>().toLens() of envHandler.secondData.copy())
         } catch (e: Exception) {
             e.printStackTrace()
             Response.invoke(Status.INTERNAL_SERVER_ERROR)

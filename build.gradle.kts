@@ -1,5 +1,4 @@
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-import org.jetbrains.kotlin.gradle.dsl.Coroutines
+
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
@@ -25,6 +24,7 @@ dependencies {
     implementation(platform("org.http4k:http4k-bom:3.284.0"))
     implementation("org.http4k:http4k-core")
     implementation("org.http4k:http4k-server-netty")
+    implementation("org.http4k:http4k-server-jetty")
     implementation("org.http4k:http4k-client-apache")
     implementation(group = "org.http4k", name = "http4k-format-jackson")
     implementation(group = "org.http4k", name = "http4k-format-kotlinx-serialization")
