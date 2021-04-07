@@ -1,7 +1,7 @@
-package de.universegame.env_logger_server
+package de.universegame.envLoggerServer
 
-import de.universegame.env_logger_server.apirouter.router
-import de.universegame.env_logger_server.svg.EnvDataSVGGenerator
+import de.universegame.envLoggerServer.apirouter.router
+import de.universegame.envLoggerServer.svg.EnvDataSVGGenerator
 import kotlinx.serialization.json.Json
 import org.http4k.format.ConfigurableKotlinxSerialization
 import org.http4k.server.Netty
