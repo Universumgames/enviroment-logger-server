@@ -1,4 +1,4 @@
-package de.universegame.env_logger_server
+package de.universegame.envLoggerServer
 
 
 fun map(value: Double, fromLow: Double, fromHigh: Double, toLow: Double, toHigh: Double): Double {

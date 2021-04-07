@@ -4,6 +4,8 @@ import de.universegame.envLoggerServer.apirouter.router
 import de.universegame.envLoggerServer.svg.EnvDataSVGGenerator
 import kotlinx.serialization.json.Json
 import org.http4k.format.ConfigurableKotlinxSerialization
+import org.http4k.routing.bind
+import org.http4k.routing.routes
 import org.http4k.server.Netty
 import org.http4k.server.asServer
 
@@ -30,7 +32,7 @@ var envHandler: EnvHandler = EnvHandler()
 fun main() {
     Logger.init(LoggingTypes.All)
     log("Init Routes")
-    val handler = router
+    val handler = routes("/api" bind router)
     log("Loading config")
     val configSetUp = loadConfig("./config/config.json")
     //storing new variables of class
@@ -41,19 +43,19 @@ fun main() {
 
     saveFile(
         "./data/svg/hourData.svg",
-        EnvDataSVGGenerator.genSVG(envHandler.hourData, envHandler, debug = true).trimIndent().trimStart(' ')
+        EnvDataSVGGenerator.genSVG(envHandler.last6Days, envHandler, debug = true).trimIndent().trimStart(' ')
     )
     saveFile(
         "./data/svg/dayData.svg",
-        EnvDataSVGGenerator.genSVG(envHandler.dayData, envHandler, debug = true).trimIndent().trimStart(' ')
+        EnvDataSVGGenerator.genSVG(envHandler.last6Weeks, envHandler, debug = true).trimIndent().trimStart(' ')
     )
     saveFile(
         "./data/svg/monthData.svg",
-        EnvDataSVGGenerator.genSVG(envHandler.monthData, envHandler, debug = true).trimIndent().trimStart(' ')
+        EnvDataSVGGenerator.genSVG(envHandler.last6Months, envHandler, debug = true).trimIndent().trimStart(' ')
     )
     saveFile(
         "./data/svg/yearData.svg",
-        EnvDataSVGGenerator.genSVG(envHandler.yearData, envHandler, debug = true).trimIndent().trimStart(' ')
+        EnvDataSVGGenerator.genSVG(envHandler.last6Years, envHandler, debug = true).trimIndent().trimStart(' ')
     )
     log("Generated SVG's")
 

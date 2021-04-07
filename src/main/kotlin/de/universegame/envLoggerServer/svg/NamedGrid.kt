@@ -1,4 +1,4 @@
-package de.universegame.env_logger_server.svg
+package de.universegame.envLoggerServer.svg
 
 data class NamedGrid_Dimensions(
     val startXGrid: Double,

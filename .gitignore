@@ -1,0 +1,6 @@
+config
+build
+logs
+.gradle
+data
+dataBackup

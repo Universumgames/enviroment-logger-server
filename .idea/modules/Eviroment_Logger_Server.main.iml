@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module external.system.module.type="sourceSet" type="JAVA_MODULE" version="4">
+  <component name="NewModuleRootManager">
+    <output url="file://$MODULE_DIR$/../../build/classes/java/main" />
+    <exclude-output />
+    <content url="file://$MODULE_DIR$/../../src/main">
+      <sourceFolder url="file://$MODULE_DIR$/../../src/main/kotlin" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../../src/main/resources" type="java-resource" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" name="Gradle: org.jetbrains.exposed:exposed-dao:0.25.1" level="project" />
+    <orderEntry type="library" name="Gradle: org.jetbrains.exposed:exposed-jdbc:0.25.1" level="project" />
+    <orderEntry type="library" name="Gradle: org.jetbrains.exposed:exposed-java-time:0.25.1" level="project" />
+    <orderEntry type="library" name="Gradle: org.jetbrains.exposed:exposed-core:0.25.1" level="project" />
+    <orderEntry type="library" name="Gradle: org.http4k:http4k-format-kotlinx-serialization:3.284.0" level="project" />
+    <orderEntry type="library" name="Gradle: org.http4k:http4k-client-apache:3.284.0" level="project" />
+    <orderEntry type="library" name="Gradle: org.http4k:http4k-server-jetty:3.284.0" level="project" />
+    <orderEntry type="library" name="Gradle: org.http4k:http4k-server-netty:3.284.0" level="project" />
+    <orderEntry type="library" name="Gradle: org.http4k:http4k-format-jackson:3.284.0" level="project" />
+    <orderEntry type="library" name="Gradle: org.http4k:http4k-core:3.284.0" level="project" />
+    <orderEntry type="library" name="Gradle: io.jsonwebtoken:jjwt-jackson:0.11.2" level="project" />
+    <orderEntry type="library" name="Gradle: org.jetbrains.kotlin:kotlin-stdlib:1.4.21" level="project" />
+    <orderEntry type="library" name="Gradle: mysql:mysql-connector-java:5.1.49" level="project" />
+    <orderEntry type="library" name="Gradle: org.apache.commons:commons-email:1.5" level="project" />
+    <orderEntry type="library" name="Gradle: io.jsonwebtoken:jjwt-impl:0.11.2" level="project" />
+    <orderEntry type="library" name="Gradle: io.jsonwebtoken:jjwt-api:0.11.2" level="project" />
+    <orderEntry type="library" name="Gradle: org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.5" level="project" />
+    <orderEntry type="library" name="Gradle: org.jetbrains.kotlin:kotlin-reflect:1.4.21" level="project" />
+    <orderEntry type="library" name="Gradle: org.slf4j:slf4j-api:1.7.25" level="project" />
+    <orderEntry type="library" name="Gradle: org.jetbrains.kotlinx:kotlinx-serialization-json-jvm:1.0.1" level="project" />
+    <orderEntry type="library" name="Gradle: org.http4k:http4k-format-core:3.284.0" level="project" />
+    <orderEntry type="library" name="Gradle: org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.4.21" level="project" />
+    <orderEntry type="library" name="Gradle: org.jetbrains.kotlinx:kotlinx-serialization-core-jvm:1.0.1" level="project" />
+    <orderEntry type="library" name="Gradle: org.apache.httpcomponents.client5:httpclient5:5.0.3" level="project" />
+    <orderEntry type="library" name="Gradle: org.eclipse.jetty.websocket:javax-websocket-server-impl:9.4.35.v20201120" level="project" />
+    <orderEntry type="library" name="Gradle: org.eclipse.jetty:jetty-servlet:9.4.35.v20201120" level="project" />
+    <orderEntry type="library" name="Gradle: org.eclipse.jetty:jetty-server:9.4.35.v20201120" level="project" />
+    <orderEntry type="library" name="Gradle: javax.servlet:javax.servlet-api:4.0.1" level="project" />
+    <orderEntry type="library" name="Gradle: io.netty:netty-codec-http2:4.1.52.Final" level="project" />
+    <orderEntry type="library" name="Gradle: com.fasterxml.jackson.core:jackson-databind:2.12.0" level="project" />
+    <orderEntry type="library" name="Gradle: com.fasterxml.jackson.module:jackson-module-kotlin:2.12.0" level="project" />
+    <orderEntry type="library" name="Gradle: org.jetbrains.kotlin:kotlin-stdlib-common:1.4.21" level="project" />
+    <orderEntry type="library" name="Gradle: org.jetbrains:annotations:13.0" level="project" />
+    <orderEntry type="library" name="Gradle: com.sun.mail:javax.mail:1.5.6" level="project" />
+    <orderEntry type="library" name="Gradle: org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.4.21" level="project" />
+    <orderEntry type="library" name="Gradle: org.apache.httpcomponents.core5:httpcore5-h2:5.0.2" level="project" />
+    <orderEntry type="library" name="Gradle: org.apache.httpcomponents.core5:httpcore5:5.0.2" level="project" />
+    <orderEntry type="library" name="Gradle: commons-codec:commons-codec:1.13" level="project" />
+    <orderEntry type="library" name="Gradle: org.eclipse.jetty.websocket:websocket-server:9.4.35.v20201120" level="project" />
+    <orderEntry type="library" name="Gradle: org.eclipse.jetty:jetty-annotations:9.4.35.v20201120" level="project" />
+    <orderEntry type="library" name="Gradle: org.eclipse.jetty.websocket:javax-websocket-client-impl:9.4.35.v20201120" level="project" />
+    <orderEntry type="library" name="Gradle: javax.websocket:javax.websocket-api:1.0" level="project" />
+    <orderEntry type="library" name="Gradle: org.eclipse.jetty:jetty-security:9.4.35.v20201120" level="project" />
+    <orderEntry type="library" name="Gradle: org.eclipse.jetty:jetty-util-ajax:9.4.35.v20201120" level="project" />
+    <orderEntry type="library" name="Gradle: org.eclipse.jetty:jetty-http:9.4.35.v20201120" level="project" />
+    <orderEntry type="library" name="Gradle: org.eclipse.jetty:jetty-io:9.4.35.v20201120" level="project" />
+    <orderEntry type="library" name="Gradle: io.netty:netty-codec-http:4.1.52.Final" level="project" />
+    <orderEntry type="library" name="Gradle: io.netty:netty-handler:4.1.52.Final" level="project" />
+    <orderEntry type="library" name="Gradle: io.netty:netty-codec:4.1.52.Final" level="project" />
+    <orderEntry type="library" name="Gradle: io.netty:netty-transport:4.1.52.Final" level="project" />
+    <orderEntry type="library" name="Gradle: io.netty:netty-buffer:4.1.52.Final" level="project" />
+    <orderEntry type="library" name="Gradle: io.netty:netty-common:4.1.52.Final" level="project" />
+    <orderEntry type="library" name="Gradle: com.fasterxml.jackson.core:jackson-annotations:2.12.0" level="project" />
+    <orderEntry type="library" name="Gradle: com.fasterxml.jackson.core:jackson-core:2.12.0" level="project" />
+    <orderEntry type="library" name="Gradle: javax.activation:activation:1.1" level="project" />
+    <orderEntry type="library" name="Gradle: org.eclipse.jetty.websocket:websocket-servlet:9.4.35.v20201120" level="project" />
+    <orderEntry type="library" name="Gradle: org.eclipse.jetty.websocket:websocket-client:9.4.35.v20201120" level="project" />
+    <orderEntry type="library" name="Gradle: org.eclipse.jetty.websocket:websocket-common:9.4.35.v20201120" level="project" />
+    <orderEntry type="library" name="Gradle: org.eclipse.jetty:jetty-plus:9.4.35.v20201120" level="project" />
+    <orderEntry type="library" name="Gradle: org.eclipse.jetty:jetty-webapp:9.4.35.v20201120" level="project" />
+    <orderEntry type="library" name="Gradle: javax.annotation:javax.annotation-api:1.3.2" level="project" />
+    <orderEntry type="library" name="Gradle: org.ow2.asm:asm-commons:9.0" level="project" />
+    <orderEntry type="library" name="Gradle: org.ow2.asm:asm:9.0" level="project" />
+    <orderEntry type="library" name="Gradle: javax.websocket:javax.websocket-client-api:1.0" level="project" />
+    <orderEntry type="library" name="Gradle: org.eclipse.jetty:jetty-util:9.4.35.v20201120" level="project" />
+    <orderEntry type="library" name="Gradle: io.netty:netty-resolver:4.1.52.Final" level="project" />
+    <orderEntry type="library" name="Gradle: org.eclipse.jetty.websocket:websocket-api:9.4.35.v20201120" level="project" />
+    <orderEntry type="library" name="Gradle: org.eclipse.jetty:jetty-client:9.4.35.v20201120" level="project" />
+    <orderEntry type="library" name="Gradle: org.eclipse.jetty:jetty-jndi:9.4.35.v20201120" level="project" />
+    <orderEntry type="library" name="Gradle: org.eclipse.jetty:jetty-xml:9.4.35.v20201120" level="project" />
+    <orderEntry type="library" name="Gradle: org.ow2.asm:asm-analysis:9.0" level="project" />
+    <orderEntry type="library" name="Gradle: org.ow2.asm:asm-tree:9.0" level="project" />
+  </component>
+</module>

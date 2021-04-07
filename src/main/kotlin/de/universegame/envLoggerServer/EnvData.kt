@@ -1,4 +1,4 @@
-package de.universegame.env_logger_server
+package de.universegame.envLoggerServer
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
@@ -21,30 +21,30 @@ data class EnvDataSet(
 )
 
 @Serializable
-enum class ENVDataPrecison {
+enum class ENVDataPrecision {
     LATESTDATAONLY,
     LAST6MINUTES,
-    LAST6HOURS_1SEC_PRECISION,
+    LAST6HOURS_3SEC_PRECISION,
+    LASTDAY_30SEC_PRECISION,
     LAST6DAYS_1_MIN_PRECISION,
     LAST6WEEKS_1_HOUR_PRECISION,
     LAST6MONTHS_1_HOUR_PRECISION,
     LAST6YEARS_6_HOUR_PRECISION
 }
 
-enum class EnvDataSelect {
-    SECOND,
-    MINUTE,
-    HOUR,
-    DAY,
-    MONTH,
-    YEAR
+fun getPrecisionByShortName(short: String): ENVDataPrecision{
+    for(prec in ENVDataPrecision.values()){
+        if(prec.name.toLowerCase().contains(short.toLowerCase()))
+            return prec
+    }
+    return ENVDataPrecision.LATESTDATAONLY
 }
 
 interface IEnvData {
     val valueMap: MutableMap<String, MutableList<EnvDataSet>>
     val uuids: MutableList<String>
     var listSize: Int
-    val precision: ENVDataPrecison
+    val precision: ENVDataPrecision
 
 
     fun addEntry(set: EnvDataSet) {
@@ -73,39 +73,46 @@ interface IEnvData {
 data class EnvData(
     override val valueMap: MutableMap<String, MutableList<EnvDataSet>> = mutableMapOf(),
     override val uuids: MutableList<String> = mutableListOf(),
-    override val precision: ENVDataPrecison,
+    override val precision: ENVDataPrecision,
     override var listSize: Int = 0,
     val maxSize: Int = 500
 ) : IEnvData {
 
     override fun addEntry(set: EnvDataSet) {
         super.addEntry(set)
-        if (valueMap[set.mac]?.size ?: 0 > maxSize)
-            valueMap[set.mac]?.removeLast()
+        for (i in 0..10) {
+            if (valueMap[set.mac]?.size ?: 0 > maxSize)
+                valueMap[set.mac]?.removeLast()
+            if (valueMap[set.mac]?.size ?: 0 <= maxSize)
+                break
+        }
     }
 }
 
 @Serializable
 data class EnvHandler(
-    var iotData: EnvData = EnvData(maxSize = 1, precision = ENVDataPrecison.LATESTDATAONLY),
+    var iotData: EnvData = EnvData(maxSize = 1, precision = ENVDataPrecision.LATESTDATAONLY),
     @Transient
     /**stores data of last ~6 minutes*/
-    var secondData: EnvData = EnvData(maxSize = 60 * 10 * 6, precision = ENVDataPrecison.LAST6MINUTES),
+    var last6Minutes: EnvData = EnvData(maxSize = 60 * 10 * 6, precision = ENVDataPrecision.LAST6MINUTES),
     @Transient
-    /**stores data of last 6 hours with 1 second precision*/
-    var minuteData: EnvData = EnvData(maxSize = 60 * 60 * 6, precision = ENVDataPrecison.LAST6HOURS_1SEC_PRECISION),
+    /**stores data of last 6 hours with 3 second precision*/
+    var last6Hours: EnvData = EnvData(maxSize = 60 * 60 * 6 / 3, precision = ENVDataPrecision.LAST6HOURS_3SEC_PRECISION),
+    @Transient
+    /**stores data of last day with 30 seconds precision*/
+    var lastDay: EnvData = EnvData(maxSize = 60 * 60 * 24 / 30, precision = ENVDataPrecision.LASTDAY_30SEC_PRECISION),
     @Transient
     /**stores data of last 6 days with 1 minute precision*/
-    var hourData: EnvData = EnvData(maxSize = 60 * 24 * 6, precision = ENVDataPrecison.LAST6DAYS_1_MIN_PRECISION),
+    var last6Days: EnvData = EnvData(maxSize = 60 * 24 * 6, precision = ENVDataPrecision.LAST6DAYS_1_MIN_PRECISION),
     @Transient
     /**stores data of last 6 weeks with 1 hour precision*/
-    var dayData: EnvData = EnvData(maxSize = 24 * 7 * 6, precision = ENVDataPrecison.LAST6WEEKS_1_HOUR_PRECISION),
+    var last6Weeks: EnvData = EnvData(maxSize = 24 * 7 * 6, precision = ENVDataPrecision.LAST6WEEKS_1_HOUR_PRECISION),
     @Transient
     /**stores data of last 6 months with 1 hour precision*/
-    var monthData: EnvData = EnvData(maxSize = 24 * 30 * 6, precision = ENVDataPrecison.LAST6MONTHS_1_HOUR_PRECISION),
+    var last6Months: EnvData = EnvData(maxSize = 24 * 30 * 6, precision = ENVDataPrecision.LAST6MONTHS_1_HOUR_PRECISION),
     @Transient
     /**stores data of last 6 years with 6 hour precision*/
-    var yearData: EnvData = EnvData(maxSize = 4 * 365 * 6, precision = ENVDataPrecison.LAST6YEARS_6_HOUR_PRECISION)
+    var last6Years: EnvData = EnvData(maxSize = 4 * 365 * 6, precision = ENVDataPrecision.LAST6YEARS_6_HOUR_PRECISION)
 ) {
 
     @Transient
@@ -117,10 +124,6 @@ data class EnvHandler(
     @Transient
     private var lastUpdatedHour = 0
 
-    /*var maxHum: Double = Double.MIN_VALUE
-        private set
-    var minHum: Double = Double.MAX_VALUE
-        private set*/
     var maxTemp: Double = Double.MIN_VALUE
         private set
     var minTemp: Double = Double.MAX_VALUE
@@ -140,23 +143,26 @@ data class EnvHandler(
 
     fun addEntry(set: EnvDataSet) {
         iotData.addEntry(set)
-        secondData.addEntry(set)
+        last6Minutes.addEntry(set)
         val time = LocalDateTime.now()
         if (time.second != lastUpdatedSecond) {
             lastUpdatedSecond = time.second
-            minuteData.addEntry(set)
+            if (time.second % 3 == 0)
+                last6Hours.addEntry(set)
+            if(time.second % 30 == 0)
+                lastDay.addEntry(set)
         }
         if (time.minute != lastUpdatedMinute) {
             lastUpdatedMinute = time.minute
-            hourData.addEntry(set)
+            last6Days.addEntry(set)
             if (time.minute % 20 == 0)
                 save()
         }
         if (time.hour != lastUpdatedHour) {
-            dayData.addEntry(set)
-            monthData.addEntry(set)
+            last6Weeks.addEntry(set)
+            last6Months.addEntry(set)
             if (time.hour % 6 == 0) {
-                yearData.addEntry(set)
+                last6Years.addEntry(set)
                 createBackup()
             }
             lastUpdatedHour = time.hour
@@ -202,46 +208,51 @@ data class EnvHandler(
     fun saveEnvDataToFiles(directory: String, json: Json, onlyIfEmpty: Boolean = false) {
         val dir = if (directory.endsWith("/") || directory.endsWith("\\")) directory else "$directory/"
         saveFile(dir + "handler.json", json.encodeToString(this), onlyIfEmpty)
-        saveFile(dir + "seconds.json", json.encodeToString(secondData), onlyIfEmpty)
-        saveFile(dir + "minutes.json", json.encodeToString(minuteData), onlyIfEmpty)
-        saveFile(dir + "hours.json", json.encodeToString(hourData), onlyIfEmpty)
-        saveFile(dir + "days.json", json.encodeToString(dayData), onlyIfEmpty)
-        saveFile(dir + "months.json", json.encodeToString(monthData), onlyIfEmpty)
-        saveFile(dir + "years.json", json.encodeToString(yearData), onlyIfEmpty)
+        saveFile(dir + "last6Minutes.json", json.encodeToString(last6Minutes), onlyIfEmpty)
+        saveFile(dir + "last6Hours.json", json.encodeToString(last6Hours), onlyIfEmpty)
+        saveFile(dir + "lastDay.json", json.encodeToString(lastDay), onlyIfEmpty)
+        saveFile(dir + "last6Days.json", json.encodeToString(last6Days), onlyIfEmpty)
+        saveFile(dir + "last6Weeks.json", json.encodeToString(last6Weeks), onlyIfEmpty)
+        saveFile(dir + "last6Months.json", json.encodeToString(last6Months), onlyIfEmpty)
+        saveFile(dir + "last6Years.json", json.encodeToString(last6Years), onlyIfEmpty)
         log("Handler saved into $directory")
     }
 
     fun loadEnvDataFromFiles(directory: String, json: Json) {
         val dir = if (directory.endsWith("/") || directory.endsWith("\\")) directory else "$directory/"
-        if (loadFile(dir + "seconds.json").isEmpty() ||
-            loadFile(dir + "minutes.json").isEmpty() ||
-            loadFile(dir + "hours.json").isEmpty() ||
-            loadFile(dir + "days.json").isEmpty() ||
-            loadFile(dir + "months.json").isEmpty() ||
-            loadFile(dir + "years.json").isEmpty()
+        if (loadFile(dir + "last6Minutes.json").isEmpty() ||
+            loadFile(dir + "last6Hours.json").isEmpty() ||
+            loadFile(dir + "lastDay.json").isEmpty() ||
+            loadFile(dir + "last6Days.json").isEmpty() ||
+            loadFile(dir + "last6Weeks.json").isEmpty() ||
+            loadFile(dir + "last6Months.json").isEmpty() ||
+            loadFile(dir + "last6Years.json").isEmpty()
         )
             saveEnvDataToFiles(directory, json, true)
         else {
-            secondData = json.decodeFromString(loadFile(dir + "seconds.json"))
-            minuteData = json.decodeFromString(loadFile(dir + "minutes.json"))
-            hourData = json.decodeFromString(loadFile(dir + "hours.json"))
-            dayData = json.decodeFromString(loadFile(dir + "days.json"))
-            monthData = json.decodeFromString(loadFile(dir + "months.json"))
-            yearData = json.decodeFromString(loadFile(dir + "years.json"))
+            last6Minutes = json.decodeFromString(loadFile(dir + "last6Minutes.json"))
+            last6Hours = json.decodeFromString(loadFile(dir + "last6Hours.json"))
+            lastDay = json.decodeFromString(loadFile(dir + "lastDay.json"))
+            last6Days = json.decodeFromString(loadFile(dir + "last6Days.json"))
+            last6Weeks = json.decodeFromString(loadFile(dir + "last6Weeks.json"))
+            last6Months = json.decodeFromString(loadFile(dir + "last6Months.json"))
+            last6Years = json.decodeFromString(loadFile(dir + "last6Years.json"))
         }
         log("core Handler loaded")
     }
 
-    fun copy(selected: EnvDataSelect): EnvHandler {
+    fun copy(selected: ENVDataPrecision): EnvHandler {
         val copy = EnvHandler()
 
         when (selected) {
-            EnvDataSelect.SECOND -> copy.secondData = this.secondData.copy()
-            EnvDataSelect.MINUTE -> copy.minuteData = this.minuteData.copy()
-            EnvDataSelect.HOUR -> copy.hourData = this.hourData.copy()
-            EnvDataSelect.DAY -> copy.dayData = this.dayData.copy()
-            EnvDataSelect.MONTH -> copy.monthData = this.monthData.copy()
-            EnvDataSelect.YEAR -> copy.yearData = this.yearData.copy()
+            ENVDataPrecision.LATESTDATAONLY -> copy.iotData = iotData
+            ENVDataPrecision.LAST6MINUTES -> copy.last6Minutes = last6Minutes
+            ENVDataPrecision.LAST6HOURS_3SEC_PRECISION -> copy.last6Hours = last6Hours
+            ENVDataPrecision.LASTDAY_30SEC_PRECISION -> copy.lastDay = lastDay
+            ENVDataPrecision.LAST6DAYS_1_MIN_PRECISION -> copy.last6Days = last6Days
+            ENVDataPrecision.LAST6WEEKS_1_HOUR_PRECISION -> copy.last6Weeks = last6Weeks
+            ENVDataPrecision.LAST6MONTHS_1_HOUR_PRECISION -> copy.last6Months = last6Months
+            ENVDataPrecision.LAST6YEARS_6_HOUR_PRECISION -> copy.last6Years = last6Years
         }
 
         copy.maxTemp = this.maxTemp
@@ -253,6 +264,19 @@ data class EnvHandler(
         copy.maxTVOC = this.maxTVOC
         copy.minTVOC = this.minTVOC
         return copy
+    }
+
+    fun getPrecision(precision: ENVDataPrecision): EnvData {
+        return when (precision) {
+            ENVDataPrecision.LATESTDATAONLY -> iotData
+            ENVDataPrecision.LAST6MINUTES -> last6Minutes
+            ENVDataPrecision.LAST6HOURS_3SEC_PRECISION -> last6Hours
+            ENVDataPrecision.LASTDAY_30SEC_PRECISION -> lastDay
+            ENVDataPrecision.LAST6DAYS_1_MIN_PRECISION -> last6Days
+            ENVDataPrecision.LAST6WEEKS_1_HOUR_PRECISION -> last6Weeks
+            ENVDataPrecision.LAST6MONTHS_1_HOUR_PRECISION -> last6Months
+            ENVDataPrecision.LAST6YEARS_6_HOUR_PRECISION -> last6Years
+        }
     }
 }
 

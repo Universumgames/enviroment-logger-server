@@ -1,7 +1,7 @@
-package de.universegame.env_logger_server.apirouter
+package de.universegame.envLoggerServer.apirouter
 
-import de.universegame.env_logger_server.LoggingTypes
-import de.universegame.env_logger_server.log
+import de.universegame.envLoggerServer.LoggingTypes
+import de.universegame.envLoggerServer.log
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import org.http4k.core.Method

@@ -1,9 +1,9 @@
-package de.universegame.env_logger_server.svg
+package de.universegame.envLoggerServer.svg
 
-import de.universegame.env_logger_server.ENVDataPrecison
-import de.universegame.env_logger_server.EnvData
-import de.universegame.env_logger_server.EnvHandler
-import de.universegame.env_logger_server.map
+import de.universegame.envLoggerServer.ENVDataPrecision
+import de.universegame.envLoggerServer.EnvData
+import de.universegame.envLoggerServer.EnvHandler
+import de.universegame.envLoggerServer.map
 import java.util.*
 import kotlin.math.abs
 
@@ -33,13 +33,14 @@ object EnvDataSVGGenerator {
         val c = Calendar.getInstance()
         c.time = Date()
         when (dataSet.precision) {
-            ENVDataPrecison.LATESTDATAONLY -> c.add(Calendar.SECOND, -1)
-            ENVDataPrecison.LAST6MINUTES -> c.add(Calendar.MINUTE, -6)
-            ENVDataPrecison.LAST6HOURS_1SEC_PRECISION -> c.add(Calendar.HOUR_OF_DAY, -6)
-            ENVDataPrecison.LAST6DAYS_1_MIN_PRECISION -> c.add(Calendar.DAY_OF_MONTH, -6)
-            ENVDataPrecison.LAST6WEEKS_1_HOUR_PRECISION -> c.add(Calendar.WEEK_OF_YEAR, -6)
-            ENVDataPrecison.LAST6MONTHS_1_HOUR_PRECISION -> c.add(Calendar.MONTH, -6)
-            ENVDataPrecison.LAST6YEARS_6_HOUR_PRECISION -> c.add(Calendar.YEAR, -6)
+            ENVDataPrecision.LATESTDATAONLY -> c.add(Calendar.SECOND, -1)
+            ENVDataPrecision.LAST6MINUTES -> c.add(Calendar.MINUTE, -6)
+            ENVDataPrecision.LAST6HOURS_3SEC_PRECISION -> c.add(Calendar.HOUR_OF_DAY, -6)
+            ENVDataPrecision.LASTDAY_30SEC_PRECISION -> c.add(Calendar.DAY_OF_MONTH, -1)
+            ENVDataPrecision.LAST6DAYS_1_MIN_PRECISION -> c.add(Calendar.DAY_OF_MONTH, -6)
+            ENVDataPrecision.LAST6WEEKS_1_HOUR_PRECISION -> c.add(Calendar.WEEK_OF_YEAR, -6)
+            ENVDataPrecision.LAST6MONTHS_1_HOUR_PRECISION -> c.add(Calendar.MONTH, -6)
+            ENVDataPrecision.LAST6YEARS_6_HOUR_PRECISION -> c.add(Calendar.YEAR, -6)
         }
         val minMaxValueSet: MinMaxValueSet = MinMaxValueSet(
             handler.maxTemp,
@@ -84,41 +85,46 @@ object EnvDataSVGGenerator {
             )
         }
         ${drawValues(dataSet, minMaxValueSet, dims)}
+        
+        <svg:text x="10" y="15">Updated on: ${Date()}</svg:text>
 </svg:svg>
 
 """.trimIndent()
     }
 
 
-    private fun genMajColText(range: ENVDataPrecison): List<String> {
+    private fun genMajColText(range: ENVDataPrecision): List<String> {
         var list: MutableList<String> = mutableListOf()
         when (range) {
-            ENVDataPrecison.LAST6MINUTES -> list =
+            ENVDataPrecision.LAST6MINUTES -> list =
                 mutableListOf("-5 minutes", "-4 minutes", "-3 minutes", "-2 minute", "-1 minute", "this minute")
-            ENVDataPrecison.LAST6HOURS_1SEC_PRECISION -> list =
+            ENVDataPrecision.LAST6HOURS_3SEC_PRECISION -> list =
                 mutableListOf("-5 hours", "-4 hours", "-3 hours", "-2 hours", "-1 hour", "this hour")
-            ENVDataPrecison.LAST6DAYS_1_MIN_PRECISION -> list =
+            ENVDataPrecision.LASTDAY_30SEC_PRECISION -> list =
+                mutableListOf("-24 hours", "-20 hours", "-16 hours", "-12 hours", "-8 hours", "last 4 hours")
+            ENVDataPrecision.LAST6DAYS_1_MIN_PRECISION -> list =
                 mutableListOf("-5 days", "-4 days", "-3 days", "-2 days", "yesterday", "today")
-            ENVDataPrecison.LAST6WEEKS_1_HOUR_PRECISION -> list =
+            ENVDataPrecision.LAST6WEEKS_1_HOUR_PRECISION -> list =
                 mutableListOf("-5 weeks", "-4 weeks", "-3 weeks", "-2 weeks", "last week", "last 7 days")
-            ENVDataPrecison.LAST6MONTHS_1_HOUR_PRECISION -> list =
+            ENVDataPrecision.LAST6MONTHS_1_HOUR_PRECISION -> list =
                 mutableListOf("-5 months", "-4 months", "-3 months", "-2 months", "last month", "last 30 days")
-            ENVDataPrecison.LAST6YEARS_6_HOUR_PRECISION -> list =
+            ENVDataPrecision.LAST6YEARS_6_HOUR_PRECISION -> list =
                 mutableListOf("-5 years", "-4 years", "-3 years", "-2 years", "last year", "last 365 days")
-            ENVDataPrecison.LATESTDATAONLY -> list = mutableListOf()
+            ENVDataPrecision.LATESTDATAONLY -> list = mutableListOf()
         }
         return list
     }
 
-    private fun genMinColText(range: ENVDataPrecison, cols: Int = 6, subCols: Int = 6): List<String> {
+    private fun genMinColText(range: ENVDataPrecision, cols: Int = 6, subCols: Int = 6): List<String> {
         when (range) {
-            ENVDataPrecison.LAST6MINUTES -> return genRecurring("s", 60, subCols, cols)
-            ENVDataPrecison.LAST6HOURS_1SEC_PRECISION -> return genRecurring("m", 60, subCols, cols)
-            ENVDataPrecison.LAST6DAYS_1_MIN_PRECISION -> return genRecurring("h", 24, subCols, cols)
-            ENVDataPrecison.LAST6WEEKS_1_HOUR_PRECISION -> return genRecurring("d", 7, subCols, cols)
-            ENVDataPrecison.LAST6MONTHS_1_HOUR_PRECISION -> return genRecurring("w", 4, subCols, cols)
-            ENVDataPrecison.LAST6YEARS_6_HOUR_PRECISION -> return genRecurring("M", 12, subCols, cols)
-            ENVDataPrecison.LATESTDATAONLY -> return listOf()
+            ENVDataPrecision.LAST6MINUTES -> return genRecurring("s", 60, subCols, cols)
+            ENVDataPrecision.LAST6HOURS_3SEC_PRECISION -> return genRecurring("m", 60, subCols, cols)
+            ENVDataPrecision.LASTDAY_30SEC_PRECISION -> return genRecurringSimple("h", 24, 1, 1)
+            ENVDataPrecision.LAST6DAYS_1_MIN_PRECISION -> return genRecurring("h", 24, subCols, cols)
+            ENVDataPrecision.LAST6WEEKS_1_HOUR_PRECISION -> return genRecurring("d", 7, subCols, cols)
+            ENVDataPrecision.LAST6MONTHS_1_HOUR_PRECISION -> return genRecurring("w", 4, subCols, cols)
+            ENVDataPrecision.LAST6YEARS_6_HOUR_PRECISION -> return genRecurring("M", 12, subCols, cols)
+            ENVDataPrecision.LATESTDATAONLY -> return listOf()
         }
     }
 
@@ -126,6 +132,14 @@ object EnvDataSVGGenerator {
         val list: MutableList<String> = mutableListOf()
         val interval = maxValue / subCols.toDouble()
         for (i in 0..((maxValue / interval) * cols).toInt()) {
+            list.add(((i * interval) % maxValue).toInt().toString() + sizeName)
+        }
+        return list.reversed()
+    }
+
+    fun genRecurringSimple(sizeName: String, maxValue: Int, interval: Int, nr: Int): List<String>{
+        val list: MutableList<String> = mutableListOf()
+        for (i in 0..((maxValue / interval.toDouble()) * nr).toInt()) {
             list.add(((i * interval) % maxValue).toInt().toString() + sizeName)
         }
         return list.reversed()

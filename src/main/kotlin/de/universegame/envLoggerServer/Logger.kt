@@ -1,4 +1,4 @@
-package de.universegame.env_logger_server
+package de.universegame.envLoggerServer
 
 import java.io.File
 import java.time.LocalDateTime

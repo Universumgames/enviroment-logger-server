@@ -1,9 +1,9 @@
-package de.universegame.env_logger_server.apirouter
+package de.universegame.envLoggerServer.apirouter
 
-import de.universegame.env_logger_server.EnvData
-import de.universegame.env_logger_server.EnvDataSet
-import de.universegame.env_logger_server.envHandler
-import de.universegame.env_logger_server.http4kJsonConfig.auto
+import de.universegame.envLoggerServer.EnvData
+import de.universegame.envLoggerServer.EnvDataSet
+import de.universegame.envLoggerServer.envHandler
+import de.universegame.envLoggerServer.http4kJsonConfig.auto
 import org.http4k.core.*
 import org.http4k.routing.path
 

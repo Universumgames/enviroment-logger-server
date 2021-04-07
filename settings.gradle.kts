@@ -1,3 +1,3 @@
 
-rootProject.name = "Eviroment_Logger_Server"
+rootProject.name = "Enviroment_Logger_Server"
 

@@ -10,7 +10,7 @@ plugins {
 }
 
 group = "de.cmm"
-version = "1.0-SNAPSHOT"
+version = "1.0"
 val exposed_version = "0.25.1"
 
 repositories {
@@ -46,5 +46,5 @@ tasks.withType<KotlinCompile> {
 }
 
 application{
-    mainClassName = "de.universegame.env_logger_server.MainKt"
+    mainClassName = "de.universegame.envLoggerServer.MainKt"
 }

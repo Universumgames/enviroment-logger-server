@@ -1,4 +1,4 @@
-package de.universegame.env_logger_server
+package de.universegame.envLoggerServer
 
 import kotlinx.serialization.Serializable
 import org.http4k.core.Status

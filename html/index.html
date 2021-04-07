@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <link rel="stylesheet" type="text/css" href="./style.css" />
+        <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300&display=swap" rel="stylesheet" />
+        <meta name="author" content="UniversumGames" />
+        <title>Env Logger</title>
+    </head>
+    <script lang="js">
+        function onSelectChange(event){
+            var obj = document.getElementById("dataContainer")
+            var url = "/api/data/svg/" + event.target.value
+            obj.data = url
+        }
+    </script>
+    <body>
+        <label for="select_span">Select duration: </label>
+        <select name="timespan" id="select_span" onchange="onSelectChange(event)">
+            <option value="minutes">Last 6 Minutes</option>
+            <option value="hours">Last 6 Hours</option>
+            <option value="day">Last 24 Hours</option>
+            <option value="days">Last 6 Days</option>
+            <option value="weeks">Last 6 Weeks</option>
+            <option value="months">Last 6 Months</option>
+            <option value="years">Last 6 Years</option>
+        </select>
+        <object
+            data="/api/data/svg/minutes"
+            type="image/svg+xml"
+            style="width: 100%; height: auto"
+            id="dataContainer"
+            standby="loading data"
+        ></object>
+    </body>
+</html>

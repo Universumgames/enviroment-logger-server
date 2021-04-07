@@ -1,4 +1,4 @@
-package de.universegame.env_logger_server
+package de.universegame.envLoggerServer
 
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
@@ -58,7 +58,7 @@ fun saveFile(filename: String, text: String, onlyIfEmpty: Boolean = true) {
         file.writeText(text)
 }
 
-var dateFormat: DateFormat = SimpleDateFormat("yyyy_mm_dd_hh")
+var dateFormat: DateFormat = SimpleDateFormat("yyyy_MM_dd_hh")
 
 fun copyDirectory(inputDir: String, outputDir: String): Boolean {
     val IF = File(inputDir).also { file ->
@@ -72,8 +72,9 @@ fun copyDirectory(inputDir: String, outputDir: String): Boolean {
         file.parentFile.mkdirs()
         file.mkdirs()
     }
+    log(outDir)
     var returnVal: Boolean = true
-    IF.copyRecursively(OF, false,onError = { file: File, ioException: IOException ->
+    IF.copyRecursively(OF, false, onError = { file: File, ioException: IOException ->
         returnVal = false
         OnErrorAction.SKIP
     })
