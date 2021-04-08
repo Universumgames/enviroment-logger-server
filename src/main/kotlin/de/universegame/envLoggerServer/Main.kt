@@ -9,7 +9,7 @@ import kotlinx.serialization.json.Json
 import org.http4k.format.ConfigurableKotlinxSerialization
 import org.http4k.routing.bind
 import org.http4k.routing.routes
-import org.http4k.server.Netty
+import org.http4k.server.Apache4Server
 import org.http4k.server.asServer
 
 /**
@@ -70,7 +70,7 @@ fun main() {
 
     if (configSetUp) {
         log("Starting server")
-        val server = handler.asServer(Netty(config.serverConfig.serverPort)).start()
+        val server = handler.asServer(Apache4Server(config.serverConfig.serverPort)).start()
         log("To stop the server, type 'stop'")
 
         while (readLine() != "stop");

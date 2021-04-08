@@ -24,9 +24,9 @@ val dataRoutes = routes(
                 clone = envHandler.copy(precision)
             }
             if (type.toLowerCase() == "svg")
-                Response(Status.OK).body(EnvDataSVGGenerator.genSVG(clone.getPrecision(precision), clone))
+                Response(Status.OK).body(EnvDataSVGGenerator.getSVGData(precision, clone))
             else
-                Response(Status.OK).with(Body.auto<EnvData>().toLens() of envHandler.last6Hours.copy())
+                Response(Status.OK).with(Body.auto<EnvData>().toLens() of clone.getPrecision(precision))
         } catch (e: Exception) {
             e.printStackTrace()
             Response.invoke(Status.INTERNAL_SERVER_ERROR)

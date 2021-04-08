@@ -22,6 +22,28 @@ private data class MinMaxValueSet(
 
 object EnvDataSVGGenerator {
 
+    private data class EnvDataSVGData(
+        val content: String,
+        val created: Date,
+        val precision: ENVDataPrecision
+    )
+
+    private val svgMutableMap: MutableMap<ENVDataPrecision, EnvDataSVGData> = mutableMapOf()
+
+    fun getSVGData(precision: ENVDataPrecision, handler: EnvHandler): String {
+        if (precision == ENVDataPrecision.LAST6MINUTES_1SEC_PRECISION)
+            return genSVG(handler.getPrecision(precision), handler)
+        val c = Calendar.getInstance()
+        c.time = Date()
+        c.add(Calendar.MINUTE, -10)
+        val thresholdTime = c.time
+        if (svgMutableMap[precision] == null || svgMutableMap[precision]?.created!! < thresholdTime) {
+            svgMutableMap[precision] =
+                EnvDataSVGData(genSVG(handler.getPrecision(precision), handler), Date(), precision)
+        }
+        return svgMutableMap[precision]?.content ?: ""
+    }
+
     fun genSVG(
         dataSet: EnvData,
         handler: EnvHandler,
@@ -36,7 +58,9 @@ object EnvDataSVGGenerator {
         for (device in dataSet.valueMap) {
             avgDataPoints += device.value.size
         }
-        avgDataPoints /= dataSet.listSize
+        if (dataSet.listSize != 0)
+            avgDataPoints /= dataSet.listSize
+        else avgDataPoints = 0.0
 
         val c = Calendar.getInstance()
         c.time = Date()

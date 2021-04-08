@@ -14,10 +14,10 @@ enum class ENVDataPrecision {
     LAST6YEARS_6_HOUR_PRECISION
 }
 
-fun ENVDataPrecision.toListSize(): Int{
-    return when(this){
+fun ENVDataPrecision.toListSize(): Int {
+    return when (this) {
         ENVDataPrecision.LATESTDATAONLY -> 1
-        ENVDataPrecision.LAST6MINUTES_1SEC_PRECISION -> 60 * 6
+        ENVDataPrecision.LAST6MINUTES_1SEC_PRECISION -> 60 * 6 * 10
         ENVDataPrecision.LAST6HOURS_3SEC_PRECISION -> 60 * 60 * 6 / 3
         ENVDataPrecision.LASTDAY_30SEC_PRECISION -> 60 * 60 * 24 / 30
         ENVDataPrecision.LAST6DAYS_1_MIN_PRECISION -> 60 * 24 * 6
@@ -28,8 +28,8 @@ fun ENVDataPrecision.toListSize(): Int{
 }
 
 fun getPrecisionByShortName(short: String): ENVDataPrecision {
-    for(prec in ENVDataPrecision.values()){
-        if(prec.name.toLowerCase().contains(short.toLowerCase()))
+    for (prec in ENVDataPrecision.values()) {
+        if (prec.name.toLowerCase().contains(short.toLowerCase()))
             return prec
     }
     return ENVDataPrecision.LATESTDATAONLY

@@ -25,7 +25,7 @@ dependencies {
     implementation("org.http4k:http4k-core")
     implementation("org.http4k:http4k-server-netty")
     implementation("org.http4k:http4k-server-jetty")
-    implementation("org.http4k:http4k-client-apache")
+    implementation("org.http4k:http4k-server-apache4")
     implementation(group = "org.http4k", name = "http4k-format-jackson")
     implementation(group = "org.http4k", name = "http4k-format-kotlinx-serialization")
     implementation("org.jetbrains.exposed:exposed-core:$exposed_version")

@@ -10,7 +10,6 @@ import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.time.LocalDateTime
 import java.util.*
-import kotlin.math.abs
 
 @Serializable
 data class EnvHandler(
@@ -43,10 +42,18 @@ data class EnvHandler(
     private var lastUpdatedSecond = 0
 
     @Transient
+    private var lastUpdatedSeconds: MutableMap<String, Int> = mutableMapOf()
+
+    @Transient
     private var lastUpdatedMinute = 0
 
     @Transient
+    private var lastUpdatedMinutes: MutableMap<String, Int> = mutableMapOf()
+
+    @Transient
     private var lastUpdatedHour = 0
+    @Transient
+    private var lastUpdatedHours: MutableMap<String, Int> = mutableMapOf()
 
     //min/max values for setting range in svg
     var maxTemp: Double = Double.MIN_VALUE
@@ -70,33 +77,30 @@ data class EnvHandler(
      * @param set add Dataset to structure, depending on the current time, time lat updated and purpose of subsets
      * */
     fun addEntry(set: EnvDataSet) {
-        if (!dataSetValid(set))
-            return
         iotData.addEntry(set)
-
+        last6Minutes.addEntry(set)
         val time = LocalDateTime.now()
-        if (time.second != lastUpdatedSecond) {
-            last6Minutes.addEntry(set)
-            lastUpdatedSecond = time.second
+        if (lastUpdatedSeconds[set.mac] == null || time.second != lastUpdatedSeconds[set.mac] ?: 0) {
+            lastUpdatedSeconds[set.mac] = time.second
             if (time.second % 3 == 0)
                 last6Hours.addEntry(set)
             if (time.second % 30 == 0)
                 lastDay.addEntry(set)
         }
-        if (time.minute != lastUpdatedMinute) {
-            lastUpdatedMinute = time.minute
+        if (lastUpdatedMinutes[set.mac] == null || time.minute != lastUpdatedMinutes[set.mac] ?: 0) {
+            lastUpdatedMinutes[set.mac] = time.minute
             last6Days.addEntry(set)
-            if (time.minute % 20 == 0)
+            if (time.minute % 10 == 0)
                 save()
         }
-        if (time.hour != lastUpdatedHour) {
+        if (lastUpdatedHours[set.mac] == null || time.hour != lastUpdatedHours[set.mac] ?: 0) {
             last6Weeks.addEntry(set)
             last6Months.addEntry(set)
             if (time.hour % 6 == 0) {
                 last6Years.addEntry(set)
                 createBackup()
             }
-            lastUpdatedHour = time.hour
+            lastUpdatedHours[set.mac] = time.hour
 
         }
         updateMinMax(set)
@@ -233,40 +237,6 @@ data class EnvHandler(
             ENVDataPrecision.LAST6MONTHS_1_HOUR_PRECISION -> last6Months
             ENVDataPrecision.LAST6YEARS_6_HOUR_PRECISION -> last6Years
         }
-    }
-
-    @Transient
-    var lastHum: Double = -1.0
-
-    @Transient
-    var lastTemp: Double = -1.0
-
-    @Transient
-    var lastPres: Double = -1.0
-
-    /*@Transient
-    var lastCO2: Int = -1
-
-    @Transient
-    var lastTVOC: Int = -1*/
-
-    fun dataSetValid(set: EnvDataSet): Boolean {
-        if (lastHum == -1.0)
-            lastHum = set.humidity
-        if (lastTemp == -1.0)
-            lastTemp = set.temperature
-        if (lastPres == -1.0)
-            lastPres = set.pressure
-
-        if ((abs(lastHum - set.humidity) < lastHum * 0.1) &&
-            (abs(lastTemp - set.temperature) < lastTemp * 0.1) &&
-            (abs(lastPres - set.pressure) < lastPres * 0.01)
-        ) {
-            lastHum += (set.humidity - lastHum) * .5
-            lastTemp += (set.temperature - lastTemp) * .5
-            lastPres += (set.pressure - lastPres) * .1
-            return true
-        } else return false
     }
 }
 
