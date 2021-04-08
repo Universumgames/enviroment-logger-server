@@ -4,10 +4,6 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import java.io.File
 import java.io.IOException
-import java.text.DateFormat
-import java.text.SimpleDateFormat
-import java.util.*
-
 
 /**
  * load configuration from file **filename**
@@ -42,6 +38,11 @@ fun saveConfig(filename: String) {
 
 }
 
+/**
+ * Load text from file, if file dos not exists it will be created with no content
+ * @param filename the filename that should be read from
+ * @return content of file
+ * */
 fun loadFile(filename: String): String {
     val file = File(filename).also { file ->
         file.parentFile.mkdirs()
@@ -50,6 +51,12 @@ fun loadFile(filename: String): String {
     return file.readText()
 }
 
+/**
+ * save text to file
+ * @param filename filename text should be written to
+ * @param text the text that should be saved
+ * @param onlyIfEmpty defines whether to overwrite possibly existing data
+ * */
 fun saveFile(filename: String, text: String, onlyIfEmpty: Boolean = true) {
     val file = File(filename).also { file ->
         file.parentFile.mkdirs()
@@ -58,21 +65,21 @@ fun saveFile(filename: String, text: String, onlyIfEmpty: Boolean = true) {
         file.writeText(text)
 }
 
-var dateFormat: DateFormat = SimpleDateFormat("yyyy_MM_dd_hh")
-
+/**
+ * Copy directory recursively
+ * @param inputDir directory to copy from
+ * @param outputDir directory to copy to
+ * */
 fun copyDirectory(inputDir: String, outputDir: String): Boolean {
     val IF = File(inputDir).also { file ->
         file.parentFile.mkdirs()
         file.mkdirs()
     }
-    val outDir =
-        (if (outputDir.endsWith("/") || outputDir.endsWith("\\")) outputDir else "$outputDir/") +
-                dateFormat.format(Calendar.getInstance().time)
-    val OF = File(outDir).also { file ->
+    val OF = File(outputDir).also { file ->
         file.parentFile.mkdirs()
         file.mkdirs()
     }
-    log(outDir)
+    log(outputDir)
     var returnVal: Boolean = true
     IF.copyRecursively(OF, false, onError = { file: File, ioException: IOException ->
         returnVal = false

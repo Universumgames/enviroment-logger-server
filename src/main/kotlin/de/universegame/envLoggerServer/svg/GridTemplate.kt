@@ -1,5 +1,8 @@
 package de.universegame.envLoggerServer.svg
 
+/**
+ * Creates a simple grid
+ * */
 fun grid_Template(
     startX: Double,
     startY: Double,

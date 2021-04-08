@@ -1,120 +1,44 @@
-package de.universegame.envLoggerServer
+package de.universegame.envLoggerServer.envData
 
+import de.universegame.envLoggerServer.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import java.text.DateFormat
+import java.text.SimpleDateFormat
 import java.time.LocalDateTime
 import java.util.*
-
-@Serializable
-data class EnvDataSet(
-    val humidity: Double,
-    val temperature: Double,
-    val pressure: Double,
-    val co2: Double,
-    val tvoc: Double,
-    val heightApproximation: Double,
-    val mac: String,
-    val time: Long = Date().time
-)
-
-@Serializable
-enum class ENVDataPrecision {
-    LATESTDATAONLY,
-    LAST6MINUTES,
-    LAST6HOURS_3SEC_PRECISION,
-    LASTDAY_30SEC_PRECISION,
-    LAST6DAYS_1_MIN_PRECISION,
-    LAST6WEEKS_1_HOUR_PRECISION,
-    LAST6MONTHS_1_HOUR_PRECISION,
-    LAST6YEARS_6_HOUR_PRECISION
-}
-
-fun getPrecisionByShortName(short: String): ENVDataPrecision{
-    for(prec in ENVDataPrecision.values()){
-        if(prec.name.toLowerCase().contains(short.toLowerCase()))
-            return prec
-    }
-    return ENVDataPrecision.LATESTDATAONLY
-}
-
-interface IEnvData {
-    val valueMap: MutableMap<String, MutableList<EnvDataSet>>
-    val uuids: MutableList<String>
-    var listSize: Int
-    val precision: ENVDataPrecision
-
-
-    fun addEntry(set: EnvDataSet) {
-        if (valueMap[set.mac] == null) valueMap[set.mac] = mutableListOf()
-        if (!uuids.contains(set.mac)) {
-            uuids.add(set.mac)
-            listSize++
-        }
-        valueMap[set.mac]?.prepend(set)
-    }
-
-    fun addEntry(
-        humidity: Double,
-        temperature: Double,
-        pressure: Double,
-        co2: Double,
-        tvoc: Double,
-        heightApproximation: Double,
-        mac: String
-    ) {
-        addEntry(EnvDataSet(humidity, temperature, pressure, co2, tvoc, heightApproximation, mac, Date().time))
-    }
-}
-
-@Serializable
-data class EnvData(
-    override val valueMap: MutableMap<String, MutableList<EnvDataSet>> = mutableMapOf(),
-    override val uuids: MutableList<String> = mutableListOf(),
-    override val precision: ENVDataPrecision,
-    override var listSize: Int = 0,
-    val maxSize: Int = 500
-) : IEnvData {
-
-    override fun addEntry(set: EnvDataSet) {
-        super.addEntry(set)
-        for (i in 0..10) {
-            if (valueMap[set.mac]?.size ?: 0 > maxSize)
-                valueMap[set.mac]?.removeLast()
-            if (valueMap[set.mac]?.size ?: 0 <= maxSize)
-                break
-        }
-    }
-}
+import kotlin.math.abs
 
 @Serializable
 data class EnvHandler(
-    var iotData: EnvData = EnvData(maxSize = 1, precision = ENVDataPrecision.LATESTDATAONLY),
+    var iotData: EnvData = EnvData(precision = ENVDataPrecision.LATESTDATAONLY),
     @Transient
     /**stores data of last ~6 minutes*/
-    var last6Minutes: EnvData = EnvData(maxSize = 60 * 10 * 6, precision = ENVDataPrecision.LAST6MINUTES),
+    var last6Minutes: EnvData = EnvData(precision = ENVDataPrecision.LAST6MINUTES_1SEC_PRECISION),
     @Transient
     /**stores data of last 6 hours with 3 second precision*/
-    var last6Hours: EnvData = EnvData(maxSize = 60 * 60 * 6 / 3, precision = ENVDataPrecision.LAST6HOURS_3SEC_PRECISION),
+    var last6Hours: EnvData = EnvData(precision = ENVDataPrecision.LAST6HOURS_3SEC_PRECISION),
     @Transient
     /**stores data of last day with 30 seconds precision*/
-    var lastDay: EnvData = EnvData(maxSize = 60 * 60 * 24 / 30, precision = ENVDataPrecision.LASTDAY_30SEC_PRECISION),
+    var lastDay: EnvData = EnvData(precision = ENVDataPrecision.LASTDAY_30SEC_PRECISION),
     @Transient
     /**stores data of last 6 days with 1 minute precision*/
-    var last6Days: EnvData = EnvData(maxSize = 60 * 24 * 6, precision = ENVDataPrecision.LAST6DAYS_1_MIN_PRECISION),
+    var last6Days: EnvData = EnvData(precision = ENVDataPrecision.LAST6DAYS_1_MIN_PRECISION),
     @Transient
     /**stores data of last 6 weeks with 1 hour precision*/
-    var last6Weeks: EnvData = EnvData(maxSize = 24 * 7 * 6, precision = ENVDataPrecision.LAST6WEEKS_1_HOUR_PRECISION),
+    var last6Weeks: EnvData = EnvData(precision = ENVDataPrecision.LAST6WEEKS_1_HOUR_PRECISION),
     @Transient
     /**stores data of last 6 months with 1 hour precision*/
-    var last6Months: EnvData = EnvData(maxSize = 24 * 30 * 6, precision = ENVDataPrecision.LAST6MONTHS_1_HOUR_PRECISION),
+    var last6Months: EnvData = EnvData(precision = ENVDataPrecision.LAST6MONTHS_1_HOUR_PRECISION),
     @Transient
     /**stores data of last 6 years with 6 hour precision*/
-    var last6Years: EnvData = EnvData(maxSize = 4 * 365 * 6, precision = ENVDataPrecision.LAST6YEARS_6_HOUR_PRECISION)
+    var last6Years: EnvData = EnvData(precision = ENVDataPrecision.LAST6YEARS_6_HOUR_PRECISION)
 ) {
 
+    //last updated time
     @Transient
     private var lastUpdatedSecond = 0
 
@@ -124,6 +48,7 @@ data class EnvHandler(
     @Transient
     private var lastUpdatedHour = 0
 
+    //min/max values for setting range in svg
     var maxTemp: Double = Double.MIN_VALUE
         private set
     var minTemp: Double = Double.MAX_VALUE
@@ -141,15 +66,21 @@ data class EnvHandler(
     var minTVOC: Int = 0
         private set
 
+    /** IoT API endpoint handler
+     * @param set add Dataset to structure, depending on the current time, time lat updated and purpose of subsets
+     * */
     fun addEntry(set: EnvDataSet) {
+        if (!dataSetValid(set))
+            return
         iotData.addEntry(set)
-        last6Minutes.addEntry(set)
+
         val time = LocalDateTime.now()
         if (time.second != lastUpdatedSecond) {
+            last6Minutes.addEntry(set)
             lastUpdatedSecond = time.second
             if (time.second % 3 == 0)
                 last6Hours.addEntry(set)
-            if(time.second % 30 == 0)
+            if (time.second % 30 == 0)
                 lastDay.addEntry(set)
         }
         if (time.minute != lastUpdatedMinute) {
@@ -171,6 +102,9 @@ data class EnvHandler(
         updateMinMax(set)
     }
 
+    /**
+     * internal method to update min/max values
+     * */
     private fun updateMinMax(set: EnvDataSet) {
         //if (set.humidity > maxHum) maxHum = set.humidity
         //if (set.humidity < minHum) minHum = set.humidity
@@ -201,10 +135,18 @@ data class EnvHandler(
         addEntry(EnvDataSet(humidity, temperature, pressure, co2, tvoc, heightApproximation, mac, Date().time))
     }
 
+    /** Internal method to save data struct easily to json files
+     * */
     private fun save() {
         saveEnvDataToFiles("./data", customJson, onlyIfEmpty = false)
     }
 
+    /**
+     * Method to save data into multiple json files
+     * @param directory Directory to save the json files to
+     * @param json JSON object to configure json serializer
+     * @param onlyIfEmpty define if existing files should be overwritten
+     * */
     fun saveEnvDataToFiles(directory: String, json: Json, onlyIfEmpty: Boolean = false) {
         val dir = if (directory.endsWith("/") || directory.endsWith("\\")) directory else "$directory/"
         saveFile(dir + "handler.json", json.encodeToString(this), onlyIfEmpty)
@@ -215,9 +157,14 @@ data class EnvHandler(
         saveFile(dir + "last6Weeks.json", json.encodeToString(last6Weeks), onlyIfEmpty)
         saveFile(dir + "last6Months.json", json.encodeToString(last6Months), onlyIfEmpty)
         saveFile(dir + "last6Years.json", json.encodeToString(last6Years), onlyIfEmpty)
-        log("Handler saved into $directory")
+        Logger.log("Handler saved into $directory")
     }
 
+    /**
+     * Method to load internal objects
+     * @param directory Directory the data files were saved to
+     * @param json JSON object to deserialize
+     * */
     fun loadEnvDataFromFiles(directory: String, json: Json) {
         val dir = if (directory.endsWith("/") || directory.endsWith("\\")) directory else "$directory/"
         if (loadFile(dir + "last6Minutes.json").isEmpty() ||
@@ -238,15 +185,19 @@ data class EnvHandler(
             last6Months = json.decodeFromString(loadFile(dir + "last6Months.json"))
             last6Years = json.decodeFromString(loadFile(dir + "last6Years.json"))
         }
-        log("core Handler loaded")
+        Logger.log("core Handler loaded")
     }
 
+    /**
+     * Simple method to create simple clone of current object based on desired precision
+     * @param selected the selected precision
+     * */
     fun copy(selected: ENVDataPrecision): EnvHandler {
         val copy = EnvHandler()
 
         when (selected) {
             ENVDataPrecision.LATESTDATAONLY -> copy.iotData = iotData
-            ENVDataPrecision.LAST6MINUTES -> copy.last6Minutes = last6Minutes
+            ENVDataPrecision.LAST6MINUTES_1SEC_PRECISION -> copy.last6Minutes = last6Minutes
             ENVDataPrecision.LAST6HOURS_3SEC_PRECISION -> copy.last6Hours = last6Hours
             ENVDataPrecision.LASTDAY_30SEC_PRECISION -> copy.lastDay = lastDay
             ENVDataPrecision.LAST6DAYS_1_MIN_PRECISION -> copy.last6Days = last6Days
@@ -266,10 +217,15 @@ data class EnvHandler(
         return copy
     }
 
+    /**
+     * get data struct based on given precision
+     * @param precision selected precision
+     * @return return selected data struct
+     * */
     fun getPrecision(precision: ENVDataPrecision): EnvData {
         return when (precision) {
             ENVDataPrecision.LATESTDATAONLY -> iotData
-            ENVDataPrecision.LAST6MINUTES -> last6Minutes
+            ENVDataPrecision.LAST6MINUTES_1SEC_PRECISION -> last6Minutes
             ENVDataPrecision.LAST6HOURS_3SEC_PRECISION -> last6Hours
             ENVDataPrecision.LASTDAY_30SEC_PRECISION -> lastDay
             ENVDataPrecision.LAST6DAYS_1_MIN_PRECISION -> last6Days
@@ -278,14 +234,69 @@ data class EnvHandler(
             ENVDataPrecision.LAST6YEARS_6_HOUR_PRECISION -> last6Years
         }
     }
+
+    @Transient
+    var lastHum: Double = -1.0
+
+    @Transient
+    var lastTemp: Double = -1.0
+
+    @Transient
+    var lastPres: Double = -1.0
+
+    /*@Transient
+    var lastCO2: Int = -1
+
+    @Transient
+    var lastTVOC: Int = -1*/
+
+    fun dataSetValid(set: EnvDataSet): Boolean {
+        if (lastHum == -1.0)
+            lastHum = set.humidity
+        if (lastTemp == -1.0)
+            lastTemp = set.temperature
+        if (lastPres == -1.0)
+            lastPres = set.pressure
+
+        if ((abs(lastHum - set.humidity) < lastHum * 0.1) &&
+            (abs(lastTemp - set.temperature) < lastTemp * 0.1) &&
+            (abs(lastPres - set.pressure) < lastPres * 0.01)
+        ) {
+            lastHum += (set.humidity - lastHum) * .5
+            lastTemp += (set.temperature - lastTemp) * .5
+            lastPres += (set.pressure - lastPres) * .1
+            return true
+        } else return false
+    }
 }
 
+
+/**
+ * custom datetime formatter for formatting directory names
+ * */
+private var dateFormat: DateFormat = SimpleDateFormat("yyyy_MM_dd_hh")
+
+/**
+ * Creates a backup by copying all files into another directory
+ * @param dataDir the directory the handler data is stored in
+ * @param backupDir the directory the backup(folder) should be created in
+ * */
 fun createBackup(dataDir: String = "./data", backupDir: String = "./dataBackup") {
-    if (copyDirectory(dataDir, backupDir))
-        log("Backup created")
-    else log("Backup was already created this hour, skipping...")
+    if (copyDirectory(
+            dataDir,
+            (if (backupDir.endsWith("/") || backupDir.endsWith("\\")) backupDir else "$backupDir/") +
+                    dateFormat.format(Calendar.getInstance().time)
+        )
+    )
+        Logger.log("Backup created")
+    else Logger.log("Backup was already created this hour, skipping...")
 }
 
+/**
+ * if handler is stored in a directory, you can load it easily with this method
+ * @param directory the directory the handler was saved into
+ * @param json the JSON object to deserialize the data
+ * */
 fun loadEnvHandlerFromFiles(directory: String, json: Json): EnvHandler {
     val dir = if (directory.endsWith("/") || directory.endsWith("\\")) directory else "$directory/"
     val handlerJson = loadFile(dir + "handler.json")
@@ -295,8 +306,8 @@ fun loadEnvHandlerFromFiles(directory: String, json: Json): EnvHandler {
         handler.saveEnvDataToFiles(dir, json)
     } else
         handler = json.decodeFromString(handlerJson)
-    log("raw Handler loaded")
+    Logger.log("raw Handler loaded")
     handler.loadEnvDataFromFiles(directory, json)
-    log("Handler fully loaded")
+    Logger.log("Handler fully loaded")
     return handler
 }

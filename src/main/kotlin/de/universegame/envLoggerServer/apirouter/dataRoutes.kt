@@ -1,9 +1,9 @@
 package de.universegame.envLoggerServer.apirouter
 
-import de.universegame.envLoggerServer.EnvData
-import de.universegame.envLoggerServer.EnvHandler
+import de.universegame.envLoggerServer.envData.EnvData
+import de.universegame.envLoggerServer.envData.EnvHandler
+import de.universegame.envLoggerServer.envData.getPrecisionByShortName
 import de.universegame.envLoggerServer.envHandler
-import de.universegame.envLoggerServer.getPrecisionByShortName
 import de.universegame.envLoggerServer.http4kJsonConfig.auto
 import de.universegame.envLoggerServer.svg.EnvDataSVGGenerator
 import org.http4k.core.*
@@ -11,6 +11,9 @@ import org.http4k.routing.bind
 import org.http4k.routing.path
 import org.http4k.routing.routes
 
+/**
+ * route object to handle all get request for json and svg data
+ * */
 val dataRoutes = routes(
     "/{type}/{timespan}" bind Method.GET to { request: Request ->
         try {

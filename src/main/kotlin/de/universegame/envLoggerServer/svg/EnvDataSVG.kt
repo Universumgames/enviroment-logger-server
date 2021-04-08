@@ -1,9 +1,10 @@
 package de.universegame.envLoggerServer.svg
 
-import de.universegame.envLoggerServer.ENVDataPrecision
-import de.universegame.envLoggerServer.EnvData
-import de.universegame.envLoggerServer.EnvHandler
+import de.universegame.envLoggerServer.envData.ENVDataPrecision
+import de.universegame.envLoggerServer.envData.EnvData
+import de.universegame.envLoggerServer.envData.EnvHandler
 import de.universegame.envLoggerServer.map
+import de.universegame.envLoggerServer.round
 import java.util.*
 import kotlin.math.abs
 
@@ -30,11 +31,18 @@ object EnvDataSVGGenerator {
         val width: Int = 1700
         val dims = NamedGrid_Dimensions(120.0, 1590.0, 40.0, 960.0)
         val textData = NamedGrid_TextData(5.0, 120.0, 1700.0)
+
+        var avgDataPoints = 0.0
+        for (device in dataSet.valueMap) {
+            avgDataPoints += device.value.size
+        }
+        avgDataPoints /= dataSet.listSize
+
         val c = Calendar.getInstance()
         c.time = Date()
         when (dataSet.precision) {
             ENVDataPrecision.LATESTDATAONLY -> c.add(Calendar.SECOND, -1)
-            ENVDataPrecision.LAST6MINUTES -> c.add(Calendar.MINUTE, -6)
+            ENVDataPrecision.LAST6MINUTES_1SEC_PRECISION -> c.add(Calendar.MINUTE, -6)
             ENVDataPrecision.LAST6HOURS_3SEC_PRECISION -> c.add(Calendar.HOUR_OF_DAY, -6)
             ENVDataPrecision.LASTDAY_30SEC_PRECISION -> c.add(Calendar.DAY_OF_MONTH, -1)
             ENVDataPrecision.LAST6DAYS_1_MIN_PRECISION -> c.add(Calendar.DAY_OF_MONTH, -6)
@@ -87,6 +95,7 @@ object EnvDataSVGGenerator {
         ${drawValues(dataSet, minMaxValueSet, dims)}
         
         <svg:text x="10" y="15">Updated on: ${Date()}</svg:text>
+        <svg:text x="400" y="15">Avg. points: ${avgDataPoints.round(2)}</svg:text>
 </svg:svg>
 
 """.trimIndent()
@@ -96,7 +105,7 @@ object EnvDataSVGGenerator {
     private fun genMajColText(range: ENVDataPrecision): List<String> {
         var list: MutableList<String> = mutableListOf()
         when (range) {
-            ENVDataPrecision.LAST6MINUTES -> list =
+            ENVDataPrecision.LAST6MINUTES_1SEC_PRECISION -> list =
                 mutableListOf("-5 minutes", "-4 minutes", "-3 minutes", "-2 minute", "-1 minute", "this minute")
             ENVDataPrecision.LAST6HOURS_3SEC_PRECISION -> list =
                 mutableListOf("-5 hours", "-4 hours", "-3 hours", "-2 hours", "-1 hour", "this hour")
@@ -117,7 +126,7 @@ object EnvDataSVGGenerator {
 
     private fun genMinColText(range: ENVDataPrecision, cols: Int = 6, subCols: Int = 6): List<String> {
         when (range) {
-            ENVDataPrecision.LAST6MINUTES -> return genRecurring("s", 60, subCols, cols)
+            ENVDataPrecision.LAST6MINUTES_1SEC_PRECISION -> return genRecurring("s", 60, subCols, cols)
             ENVDataPrecision.LAST6HOURS_3SEC_PRECISION -> return genRecurring("m", 60, subCols, cols)
             ENVDataPrecision.LASTDAY_30SEC_PRECISION -> return genRecurringSimple("h", 24, 1, 1)
             ENVDataPrecision.LAST6DAYS_1_MIN_PRECISION -> return genRecurring("h", 24, subCols, cols)
@@ -137,7 +146,7 @@ object EnvDataSVGGenerator {
         return list.reversed()
     }
 
-    fun genRecurringSimple(sizeName: String, maxValue: Int, interval: Int, nr: Int): List<String>{
+    fun genRecurringSimple(sizeName: String, maxValue: Int, interval: Int, nr: Int): List<String> {
         val list: MutableList<String> = mutableListOf()
         for (i in 0..((maxValue / interval.toDouble()) * nr).toInt()) {
             list.add(((i * interval) % maxValue).toInt().toString() + sizeName)
@@ -315,7 +324,7 @@ private object RowValueGenerator {
         val distance = abs((maxTemp - minTemp) / separations)
         var curDistance = maxTemp
         for (i in 0..separations) {
-            list.add(curDistance.toInt().toString() + "°C")
+            list.add(curDistance.round(2).toString() + "°C")
             curDistance -= distance
         }
         return list
@@ -337,7 +346,7 @@ private object RowValueGenerator {
         val distance = (maxPres - minPres) / separations
         var curDistance = maxPres
         for (i in 0..separations) {
-            list.add(curDistance.toInt().toString() + "hPa")
+            list.add(curDistance.round(2).toString() + "hPa")
             curDistance -= distance
         }
         return list

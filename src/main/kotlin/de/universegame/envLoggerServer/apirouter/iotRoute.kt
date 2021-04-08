@@ -1,12 +1,15 @@
 package de.universegame.envLoggerServer.apirouter
 
-import de.universegame.envLoggerServer.EnvData
-import de.universegame.envLoggerServer.EnvDataSet
+import de.universegame.envLoggerServer.envData.EnvData
+import de.universegame.envLoggerServer.envData.EnvDataSet
 import de.universegame.envLoggerServer.envHandler
 import de.universegame.envLoggerServer.http4kJsonConfig.auto
 import org.http4k.core.*
 import org.http4k.routing.path
 
+/**
+ * route object to handle incoming iot data
+ * */
 val iotRoute = { request: Request ->
     try {
         val hum = request.get("humidity") ?: ""

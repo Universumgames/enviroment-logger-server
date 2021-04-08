@@ -1,5 +1,8 @@
 package de.universegame.envLoggerServer.svg
 
+/**
+ * Data struct to define the size if the simple named grid
+ * */
 data class NamedGrid_Dimensions(
     val startXGrid: Double,
     val endXGrid: Double,
@@ -7,6 +10,9 @@ data class NamedGrid_Dimensions(
     val endYGrid: Double
 )
 
+/**
+ * Simple data struct to set settings or the text placed in the svg
+ * */
 data class NamedGrid_TextData(
     val startXMajRowText: Double,
     val endXMajRowText: Double,
@@ -18,6 +24,9 @@ data class NamedGrid_TextData(
     val avgCharLength: Double = 10.0
 )
 
+/**
+ * create a named grid
+ * */
 fun namedGrid(
     majRowNames: List<String>,
     majColNames: List<String>,
@@ -49,7 +58,12 @@ fun namedGrid(
     """.trimIndent()
 }
 
-fun majRowNames(
+/** Internal method to generate the svg elements for the left hand side of the grid
+ * @param names list of strings for the row-declarations
+ * @param gridDims data struct for the grid dimensions
+ * @param textData data struct for the text settings
+ * */
+private fun majRowNames(
     names: List<String>,
     gridDims: NamedGrid_Dimensions,
     textData: NamedGrid_TextData
@@ -68,7 +82,12 @@ fun majRowNames(
     return lines
 }
 
-fun majColumnNames(
+/** Internal method to generate the svg elements for the top column names of the grid
+ * @param names list of strings for the row-declarations
+ * @param gridDims data struct for the grid dimensions
+ * @param textData data struct for the text settings
+ * */
+private fun majColumnNames(
     names: List<String>,
     gridDims: NamedGrid_Dimensions,
     textData: NamedGrid_TextData
@@ -86,7 +105,12 @@ fun majColumnNames(
     return lines
 }
 
-fun minRowNames(
+/** Internal method to generate the svg elements for the right hand side of the grid
+ * @param names list of strings for the row-declarations
+ * @param gridDims data struct for the grid dimensions
+ * @param textData data struct for the text settings
+ * */
+private fun minRowNames(
     names: List<String>,
     gridDims: NamedGrid_Dimensions,
     textData: NamedGrid_TextData
@@ -106,7 +130,12 @@ fun minRowNames(
     return lines
 }
 
-fun minColumnNames(
+/** Internal method to generate the svg elements for the bottom side of the grid
+ * @param names list of strings for the row-declarations
+ * @param gridDims data struct for the grid dimensions
+ * @param textData data struct for the text settings
+ * */
+private fun minColumnNames(
     names: List<String>,
     gridDims: NamedGrid_Dimensions,
     textData: NamedGrid_TextData

@@ -1,6 +1,9 @@
 package de.universegame.envLoggerServer
 
 import de.universegame.envLoggerServer.apirouter.router
+import de.universegame.envLoggerServer.envData.EnvHandler
+import de.universegame.envLoggerServer.envData.createBackup
+import de.universegame.envLoggerServer.envData.loadEnvHandlerFromFiles
 import de.universegame.envLoggerServer.svg.EnvDataSVGGenerator
 import kotlinx.serialization.json.Json
 import org.http4k.format.ConfigurableKotlinxSerialization
@@ -9,24 +12,29 @@ import org.http4k.routing.routes
 import org.http4k.server.Netty
 import org.http4k.server.asServer
 
+/**
+ * custom kotlinx json config
+ * */
 val customJson = Json {
     encodeDefaults = true
     prettyPrint = true
     ignoreUnknownKeys = true
 }
 
+/**
+ * custom http4k json config
+ * */
 object http4kJsonConfig : ConfigurableKotlinxSerialization({
     encodeDefaults = true
     prettyPrint = true
     ignoreUnknownKeys = true
 })
 
-fun <T> MutableList<T>.prepend(element: T) {
-    if (size > 0)
-        add(0, element)
-    else add(element)
-}
 
+
+/**
+ * handler object to handle all data
+ * */
 var envHandler: EnvHandler = EnvHandler()
 
 fun main() {
@@ -41,6 +49,7 @@ fun main() {
     createBackup()
     envHandler = loadEnvHandlerFromFiles("./data", customJson)
 
+    // generate svg files with preexisting data
     saveFile(
         "./data/svg/hourData.svg",
         EnvDataSVGGenerator.genSVG(envHandler.last6Days, envHandler, debug = true).trimIndent().trimStart(' ')
