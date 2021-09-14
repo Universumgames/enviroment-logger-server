@@ -120,6 +120,7 @@ object EnvDataSVGGenerator {
         
         <svg:text x="10" y="15">Updated on: ${Date()}</svg:text>
         <svg:text x="400" y="15">Avg. points: ${avgDataPoints.round(2)}</svg:text>
+        <svg:text x="700" y="15">Avg. updates per minute: ${handler.avgUpdatesPerMinute.round(2)} updates/min</svg:text>
 </svg:svg>
 
 """.trimIndent()

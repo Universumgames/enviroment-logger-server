@@ -5,6 +5,7 @@
         <meta charset="UTF-8" />
         <link rel="stylesheet" type="text/css" href="./style.css" />
         <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300&display=swap" rel="stylesheet" />
+        <link rel="shortcut icon" href="favicon.png" />
         <meta name="author" content="UniversumGames" />
         <title>Env Logger</title>
     </head>
@@ -18,7 +19,7 @@
     <body>
         <label for="select_span">Select duration: </label>
         <select name="timespan" id="select_span" onchange="onSelectChange(event)">
-            <option value="minutes">Last 6 Minutes</option>
+            <option value="minutes" selected>Last 6 Minutes</option>
             <option value="hour">Last 6 Hours</option>
             <option value="day">Last 24 Hours</option>
             <option value="days">Last 6 Days</option>

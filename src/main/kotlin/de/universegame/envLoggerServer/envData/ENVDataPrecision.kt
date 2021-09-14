@@ -1,6 +1,7 @@
 package de.universegame.envLoggerServer.envData
 
 import kotlinx.serialization.Serializable
+import java.util.*
 
 @Serializable
 enum class ENVDataPrecision {
@@ -25,6 +26,19 @@ fun ENVDataPrecision.toListSize(): Int {
         ENVDataPrecision.LAST6MONTHS_1_HOUR_PRECISION -> 24 * 30 * 6
         ENVDataPrecision.LAST6YEARS_6_HOUR_PRECISION -> 4 * 365 * 6
     }
+}
+
+fun ENVDataPrecision.toOldestAllowedTime(): Long {
+    return when (this) {
+        ENVDataPrecision.LATESTDATAONLY -> 1
+        ENVDataPrecision.LAST6MINUTES_1SEC_PRECISION -> 60 * 60
+        ENVDataPrecision.LAST6HOURS_3SEC_PRECISION -> 6 * 60 * 60
+        ENVDataPrecision.LASTDAY_30SEC_PRECISION -> 24 * 60 * 60
+        ENVDataPrecision.LAST6DAYS_1_MIN_PRECISION -> 6 * 24 * 60 * 60
+        ENVDataPrecision.LAST6WEEKS_1_HOUR_PRECISION -> 6 * 7 * 24 * 60 * 60
+        ENVDataPrecision.LAST6MONTHS_1_HOUR_PRECISION -> 6 * 5 * 7 * 24 * 60 * 60
+        ENVDataPrecision.LAST6YEARS_6_HOUR_PRECISION -> 355 * 24 * 60 * 60
+    }.toLong() * 1000
 }
 
 fun getPrecisionByShortName(short: String): ENVDataPrecision {

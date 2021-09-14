@@ -4,3 +4,5 @@ logs
 .gradle
 data
 dataBackup
+.idea
+gradle

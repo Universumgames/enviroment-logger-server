@@ -10,6 +10,7 @@ import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.time.LocalDateTime
 import java.util.*
+import kotlin.math.abs
 
 @Serializable
 data class EnvHandler(
@@ -52,8 +53,19 @@ data class EnvHandler(
 
     @Transient
     private var lastUpdatedHour = 0
+
     @Transient
     private var lastUpdatedHours: MutableMap<String, Int> = mutableMapOf()
+
+    @Transient
+    var avgUpdatesPerMinute: Double = -1.0
+    var avgUpdateLastUpdatedMin: Int = -1
+
+    @Transient
+    private var updatesCounted: Long = 0
+
+    @Transient
+    private var minutesCounted: Long = 0
 
     //min/max values for setting range in svg
     var maxTemp: Double = Double.MIN_VALUE
@@ -77,32 +89,46 @@ data class EnvHandler(
      * @param set add Dataset to structure, depending on the current time, time lat updated and purpose of subsets
      * */
     fun addEntry(set: EnvDataSet) {
+        if (!dataSetValid(set))
+            return
         iotData.addEntry(set)
         last6Minutes.addEntry(set)
         val time = LocalDateTime.now()
-        if (lastUpdatedSeconds[set.mac] == null || time.second != lastUpdatedSeconds[set.mac] ?: 0) {
+        if (lastUpdatedSeconds[set.mac] == null || time.second != (lastUpdatedSeconds[set.mac] ?: 0)) {
             lastUpdatedSeconds[set.mac] = time.second
             if (time.second % 3 == 0)
                 last6Hours.addEntry(set)
             if (time.second % 30 == 0)
                 lastDay.addEntry(set)
         }
-        if (lastUpdatedMinutes[set.mac] == null || time.minute != lastUpdatedMinutes[set.mac] ?: 0) {
+        if (lastUpdatedMinutes[set.mac] == null || time.minute != (lastUpdatedMinutes[set.mac] ?: 0)) {
             lastUpdatedMinutes[set.mac] = time.minute
             last6Days.addEntry(set)
             if (time.minute % 10 == 0)
                 save()
         }
-        if (lastUpdatedHours[set.mac] == null || time.hour != lastUpdatedHours[set.mac] ?: 0) {
+        if (lastUpdatedHours[set.mac] == null || time.hour != (lastUpdatedHours[set.mac] ?: 0)) {
             last6Weeks.addEntry(set)
             last6Months.addEntry(set)
-            if (time.hour % 6 == 0) {
+            if (time.hour % 23 == 0) {
                 last6Years.addEntry(set)
                 createBackup()
             }
             lastUpdatedHours[set.mac] = time.hour
 
         }
+
+        if(time.minute != avgUpdateLastUpdatedMin) {
+            avgUpdateLastUpdatedMin = time.minute
+            minutesCounted++
+            avgUpdatesPerMinute = updatesCounted.toDouble() / minutesCounted
+
+            if (minutesCounted >= Long.MAX_VALUE * .8 || updatesCounted >= Long.MAX_VALUE * .8) {
+                minutesCounted = 0
+                updatesCounted = 0
+            }
+        }
+        updatesCounted++
         updateMinMax(set)
     }
 
@@ -218,6 +244,7 @@ data class EnvHandler(
         copy.minCO2 = this.minCO2
         copy.maxTVOC = this.maxTVOC
         copy.minTVOC = this.minTVOC
+        copy.avgUpdatesPerMinute = this.avgUpdatesPerMinute
         return copy
     }
 
@@ -238,13 +265,46 @@ data class EnvHandler(
             ENVDataPrecision.LAST6YEARS_6_HOUR_PRECISION -> last6Years
         }
     }
+
+    @Transient
+    var lastHums: MutableMap<String, Double> = mutableMapOf()
+
+    @Transient
+    var lastTemps: MutableMap<String, Double> = mutableMapOf()
+
+    @Transient
+    var lastPress: MutableMap<String, Double> = mutableMapOf()
+
+    /*@Transient
+    var lastCO2: Int = -1
+
+    @Transient
+    var lastTVOC: Int = -1*/
+
+    private fun dataSetValid(set: EnvDataSet): Boolean {
+        val lastHum = lastHums[set.mac] ?: set.humidity
+        val lastTemp = lastTemps[set.mac] ?: set.temperature
+        val lastPres = lastPress[set.mac] ?: set.pressure
+        val returnVal = (abs(lastHum - set.humidity) < lastHum * 0.2) &&
+                (abs(lastTemp - set.temperature) < lastTemp * 0.2) &&
+                (abs(lastPres - set.pressure) < lastPres * 0.1)
+
+        lastHums[set.mac]?.getCloserTo(set.humidity, 0.5)
+        lastTemps[set.mac]?.getCloserTo(set.temperature, .5)
+        lastPress[set.mac]?.getCloserTo(set.pressure, .1)
+        return returnVal
+    }
+
+    private fun Double.getCloserTo(number: Double, fraction: Double) {
+        this.minus((this - number) * fraction)
+    }
 }
 
 
 /**
  * custom datetime formatter for formatting directory names
  * */
-private var dateFormat: DateFormat = SimpleDateFormat("yyyy_MM_dd_hh")
+private var dateFormat: DateFormat = SimpleDateFormat("yyyy_MM_dd_HH")
 
 /**
  * Creates a backup by copying all files into another directory

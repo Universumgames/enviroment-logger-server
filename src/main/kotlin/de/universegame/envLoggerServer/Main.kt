@@ -5,6 +5,7 @@ import de.universegame.envLoggerServer.envData.EnvHandler
 import de.universegame.envLoggerServer.envData.createBackup
 import de.universegame.envLoggerServer.envData.loadEnvHandlerFromFiles
 import de.universegame.envLoggerServer.svg.EnvDataSVGGenerator
+import kotlinx.coroutines.sync.Mutex
 import kotlinx.serialization.json.Json
 import org.http4k.format.ConfigurableKotlinxSerialization
 import org.http4k.routing.bind
@@ -50,7 +51,7 @@ fun main() {
     envHandler = loadEnvHandlerFromFiles("./data", customJson)
 
     // generate svg files with preexisting data
-    saveFile(
+    /*saveFile(
         "./data/svg/hourData.svg",
         EnvDataSVGGenerator.genSVG(envHandler.last6Days, envHandler, debug = true).trimIndent().trimStart(' ')
     )
@@ -66,14 +67,17 @@ fun main() {
         "./data/svg/yearData.svg",
         EnvDataSVGGenerator.genSVG(envHandler.last6Years, envHandler, debug = true).trimIndent().trimStart(' ')
     )
-    log("Generated SVG's")
-
+    log("Generated SVG's")*/
     if (configSetUp) {
         log("Starting server")
         val server = handler.asServer(Apache4Server(config.serverConfig.serverPort)).start()
+        log("Server started")
+        server.block()
+
         log("To stop the server, type 'stop'")
 
-        while (readLine() != "stop");
+        while (readLine() != "stop")
+            Thread.sleep(500)
         log("Stopping server")
         server.stop()
 
