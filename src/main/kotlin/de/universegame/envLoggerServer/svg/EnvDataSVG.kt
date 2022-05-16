@@ -37,9 +37,11 @@ object EnvDataSVGGenerator {
         c.time = Date()
         c.add(Calendar.MINUTE, -10)
         val thresholdTime = c.time
-        if (svgMutableMap[precision] == null || svgMutableMap[precision]?.created!! < thresholdTime) {
-            svgMutableMap[precision] =
-                EnvDataSVGData(genSVG(handler.getPrecision(precision), handler), Date(), precision)
+        synchronized(this) {
+            if (svgMutableMap[precision] == null || svgMutableMap[precision]?.created!! < thresholdTime) {
+                svgMutableMap[precision] =
+                    EnvDataSVGData(genSVG(handler.getPrecision(precision), handler), Date(), precision)
+            }
         }
         return svgMutableMap[precision]?.content ?: ""
     }
