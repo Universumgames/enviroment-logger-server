@@ -74,15 +74,16 @@ object EnvDataSVGGenerator {
             ENVDataPrecision.LAST6MONTHS_1_HOUR_PRECISION -> c.add(Calendar.MONTH, -6)
             ENVDataPrecision.LAST6YEARS_6_HOUR_PRECISION -> c.add(Calendar.YEAR, -6)
         }
+        dataSet.calcMinMax()
         val minMaxValueSet: MinMaxValueSet = MinMaxValueSet(
-            handler.maxTemp,
-            handler.minTemp,
-            handler.maxPres,
-            handler.minPres,
-            handler.maxCO2,
-            handler.minCO2,
-            handler.maxTVOC,
-            handler.minTVOC,
+            dataSet.maxTemp,
+            dataSet.minTemp,
+            dataSet.maxPres,
+            dataSet.minPres,
+            dataSet.maxCO2,
+            dataSet.minCO2,
+            dataSet.maxTVOC,
+            dataSet.minTVOC,
             c.time.time
         )
         return """
@@ -104,14 +105,14 @@ object EnvDataSVGGenerator {
                 listOf("Temperature", "Humidity", "Pressure", "CO2", "TVOC"),
                 genMajColText(dataSet.precision),
                 RowValueGenerator.genRowValues(
-                    handler.maxTemp,
-                    handler.minTemp,
-                    handler.maxPres,
-                    handler.minPres,
-                    handler.maxCO2,
-                    handler.minCO2,
-                    handler.maxTVOC,
-                    handler.minTVOC
+                    minMaxValueSet.maxTemp,
+                    minMaxValueSet.minTemp,
+                    minMaxValueSet.maxPres,
+                    minMaxValueSet.minPres,
+                    minMaxValueSet.maxCO2,
+                    minMaxValueSet.minCO2,
+                    minMaxValueSet.maxTVOC,
+                    minMaxValueSet.minTVOC
                 ),
                 genMinColText(dataSet.precision), dims, textData, 5, 6
             )

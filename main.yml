@@ -1,0 +1,24 @@
+---
+- name: Deploy docker containers on server
+  hosts: all
+  become: true
+  become_method: sudo
+
+  vars:
+    install_dir: "/opt/env_logger_server/"
+    jarname: "Enviroment_Logger_Server.jar"
+
+  pre_tasks:
+    - name: Build jar
+      become: false
+      local_action: ansible.builtin.command gradle shadowJar
+
+  tasks:
+    - name: copy jar file to server
+      copy:
+        src: ./build/libs/Enviroment_Logger_Server-1.0-all.jar
+        dest: "{{install_dir}}{{jarname}}"
+    - name: Restart service
+      service:
+        name: envLogger
+        state: restarted

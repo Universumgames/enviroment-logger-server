@@ -67,24 +67,6 @@ data class EnvHandler(
     @Transient
     private var minutesCounted: Long = 0
 
-    //min/max values for setting range in svg
-    var maxTemp: Double = Double.MIN_VALUE
-        private set
-    var minTemp: Double = Double.MAX_VALUE
-        private set
-    var maxPres: Double = Double.MIN_VALUE
-        private set
-    var minPres: Double = Double.MAX_VALUE
-        private set
-    var maxCO2: Int = 0
-        private set
-    var minCO2: Int = 0
-        private set
-    var maxTVOC: Int = 0
-        private set
-    var minTVOC: Int = 0
-        private set
-
     /** IoT API endpoint handler
      * @param set add Dataset to structure, depending on the current time, time lat updated and purpose of subsets
      * */
@@ -118,7 +100,7 @@ data class EnvHandler(
 
         }
 
-        if(time.minute != avgUpdateLastUpdatedMin) {
+        if (time.minute != avgUpdateLastUpdatedMin) {
             avgUpdateLastUpdatedMin = time.minute
             minutesCounted++
             avgUpdatesPerMinute = updatesCounted.toDouble() / minutesCounted
@@ -129,28 +111,6 @@ data class EnvHandler(
             }
         }
         updatesCounted++
-        updateMinMax(set)
-    }
-
-    /**
-     * internal method to update min/max values
-     * */
-    private fun updateMinMax(set: EnvDataSet) {
-        //if (set.humidity > maxHum) maxHum = set.humidity
-        //if (set.humidity < minHum) minHum = set.humidity
-
-        if (set.temperature > maxTemp) maxTemp = set.temperature
-        if (set.temperature < minTemp && set.temperature > -500) minTemp = set.temperature
-
-        if (set.pressure > maxPres) maxPres = set.pressure
-        if (set.pressure < minPres && set.pressure >= 0) minPres = set.pressure
-
-        if (set.co2 > maxCO2) maxCO2 = set.co2.toInt()
-        if (set.co2 < minCO2 && set.co2 >= 400) minCO2 = set.co2.toInt()
-
-        if (set.tvoc > maxTVOC) maxTVOC = set.tvoc.toInt()
-        if (set.tvoc < minTVOC && set.tvoc >= 0) minTVOC = set.tvoc.toInt()
-
     }
 
     fun addEntry(
@@ -178,6 +138,13 @@ data class EnvHandler(
      * @param onlyIfEmpty define if existing files should be overwritten
      * */
     fun saveEnvDataToFiles(directory: String, json: Json, onlyIfEmpty: Boolean = false) {
+        last6Minutes.calcMinMax()
+        last6Hours.calcMinMax()
+        last6Days.calcMinMax()
+        last6Weeks.calcMinMax()
+        last6Months.calcMinMax()
+        last6Years.calcMinMax()
+
         val dir = if (directory.endsWith("/") || directory.endsWith("\\")) directory else "$directory/"
         saveFile(dir + "handler.json", json.encodeToString(this), onlyIfEmpty)
         saveFile(dir + "last6Minutes.json", json.encodeToString(last6Minutes), onlyIfEmpty)
@@ -235,15 +202,6 @@ data class EnvHandler(
             ENVDataPrecision.LAST6MONTHS_1_HOUR_PRECISION -> copy.last6Months = last6Months
             ENVDataPrecision.LAST6YEARS_6_HOUR_PRECISION -> copy.last6Years = last6Years
         }
-
-        copy.maxTemp = this.maxTemp
-        copy.minTemp = this.minTemp
-        copy.maxPres = this.maxPres
-        copy.minPres = this.minPres
-        copy.maxCO2 = this.maxCO2
-        copy.minCO2 = this.minCO2
-        copy.maxTVOC = this.maxTVOC
-        copy.minTVOC = this.minTVOC
         copy.avgUpdatesPerMinute = this.avgUpdatesPerMinute
         return copy
     }
@@ -254,7 +212,7 @@ data class EnvHandler(
      * @return return selected data struct
      * */
     fun getPrecision(precision: ENVDataPrecision): EnvData {
-        return when (precision) {
+        val data =  when (precision) {
             ENVDataPrecision.LATESTDATAONLY -> iotData
             ENVDataPrecision.LAST6MINUTES_1SEC_PRECISION -> last6Minutes
             ENVDataPrecision.LAST6HOURS_3SEC_PRECISION -> last6Hours
@@ -264,6 +222,8 @@ data class EnvHandler(
             ENVDataPrecision.LAST6MONTHS_1_HOUR_PRECISION -> last6Months
             ENVDataPrecision.LAST6YEARS_6_HOUR_PRECISION -> last6Years
         }
+        data.calcMinMax()
+        return data
     }
 
     @Transient
